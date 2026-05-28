@@ -1,0 +1,7 @@
+image: C4I4_keepout_mask.pgm
+mode: scale
+resolution: 0.02500000037252903
+origin: [-3.6518929701898406, -7.417963525990611, 0.0]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196
