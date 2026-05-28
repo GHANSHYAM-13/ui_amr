@@ -17,7 +17,8 @@ var RobotConfig = {
      "sim"  → Gazebo / simulation  (use_sim_time = true)
      "real" → Physical robot       (use_sim_time = false)
   ---------------------------------------------------------- */
-  mode: "real",   /* change to "sim" for Gazebo */
+  mode: "sim",   /* change to "sim" for Gazebo */
+  use_sim_time: true,
 
 
   /* ----------------------------------------------------------

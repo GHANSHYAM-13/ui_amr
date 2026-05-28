@@ -161,8 +161,7 @@ def main():
                         nav.cancelTask()
                         break
                     if _os.path.exists(PAUSE_FLAG_FILE):
-                        print("\n[mission_runner] Pause flag detected on go-home. Halting...", flush=True)
-                        nav.cancelTask()
+                        print("\n[mission_runner] Pause flag detected on go-home. Holding robot...", flush=True)
                         while _os.path.exists(PAUSE_FLAG_FILE):
                             if _stop_requested[0]:
                                 break
@@ -170,7 +169,6 @@ def main():
                         if _stop_requested[0]:
                             break
                         print("\n[mission_runner] Resuming go-home navigation...", flush=True)
-                        nav.goToPose(home_pose)
                     time.sleep(0.5)
                 
                 if not _stop_requested[0]:
@@ -197,16 +195,14 @@ def main():
                     
                     # File-based Pause / Resume check
                     if _os.path.exists(PAUSE_FLAG_FILE):
-                        print(f"\n[mission_runner] Pause flag detected. Halting task for '{name}'...", flush=True)
-                        nav.cancelTask()
+                        print(f"\n[mission_runner] Pause flag detected. Holding robot for '{name}'...", flush=True)
                         while _os.path.exists(PAUSE_FLAG_FILE):
                             if _stop_requested[0]:
                                 break
                             time.sleep(0.3)
                         if _stop_requested[0]:
                             break
-                        print(f"\n[mission_runner] Resumed! Resending navigation goal to '{name}'...", flush=True)
-                        nav.goToPose(pose)
+                        print(f"\n[mission_runner] Resumed! Continuing navigation goal to '{name}'...", flush=True)
 
                     feedback = nav.getFeedback()
                     if feedback:

@@ -1022,6 +1022,62 @@ def saveMission():
     return jsonify({"status": "mission_saved", "count": len(data.get("waypoints", []))})
 
 
+@app.route("/mission/save_named", methods=["POST"])
+def saveNamedMission():
+    """Save a mission with a custom name."""
+    data = request.json
+    name = data.get("name", "").strip()
+    if not name:
+        return jsonify({"status": "error", "message": "Name is required"}), 400
+    safe_name = "".join([c for c in name if c.isalpha() or c.isdigit() or c in '._-']).strip()
+    if not safe_name:
+        return jsonify({"status": "error", "message": "Invalid name"}), 400
+    if not safe_name.endswith(".json"):
+        safe_name += ".json"
+    
+    file_path = os.path.join(MISSION_FOLDER, safe_name)
+    with open(file_path, "w") as f:
+        json.dump({"waypoints": data.get("waypoints", [])}, f, indent=2)
+    return jsonify({"status": "success", "name": safe_name[:-5]})
+
+
+@app.route("/missions/list", methods=["GET"])
+def listMissions():
+    """List all saved named missions on disk."""
+    missions = []
+    if os.path.exists(MISSION_FOLDER):
+        for file in os.listdir(MISSION_FOLDER):
+            if file.endswith(".json") and file not in ["mission_history.json", "mission.json"]:
+                file_path = os.path.join(MISSION_FOLDER, file)
+                try:
+                    with open(file_path, "r") as f:
+                        content = json.load(f)
+                        missions.append({
+                            "name": file[:-5],
+                            "waypoints": content.get("waypoints", [])
+                        })
+                except Exception:
+                    pass
+    return jsonify(missions)
+
+
+@app.route("/mission/load_named", methods=["POST"])
+def loadNamedMission():
+    """Load a named mission into the main mission.json file."""
+    data = request.json
+    name = data.get("name", "").strip()
+    if not name.endswith(".json"):
+        name += ".json"
+    file_path = os.path.join(MISSION_FOLDER, name)
+    if not os.path.exists(file_path):
+        return jsonify({"status": "error", "message": "Mission not found"}), 404
+    
+    with open(file_path, "r") as src, open(MISSION_FILE, "w") as dest:
+        content = json.load(src)
+        json.dump(content, dest, indent=2)
+    return jsonify({"status": "success", "waypoints": content.get("waypoints", [])})
+
+
 # Pause flag and History paths
 PAUSE_FLAG_FILE = os.path.join(MISSION_FOLDER, "pause.flag")
 HISTORY_FILE    = os.path.join(MISSION_FOLDER, "mission_history.json")
@@ -1165,7 +1221,7 @@ def cancelGoal():
 
 @app.route("/mission/pause", methods=["POST"])
 def pauseMission():
-    """Pause the running mission by writing a pause flag and cancelling current Nav2 task."""
+    """Pause the running mission by writing a pause flag and throttling speed to zero (hold active goal)."""
     try:
         with open(PAUSE_FLAG_FILE, "w") as f:
             f.write("paused")
@@ -1173,11 +1229,11 @@ def pauseMission():
     except Exception as e:
         return jsonify({"status": "error", "message": f"Could not pause: {e}"}), 500
 
-    # Cancel the active Nav2 task so the robot halts immediately
-    _nav_goal_node.cancel_goal()
+    # Publish zero speed limit (hold pose) without cancelling active Nav2 goal
     try:
         subprocess.Popen(
-            ["ros2", "action", "cancel", "/navigate_to_pose"],
+            ["ros2", "topic", "pub", "--once", "/speed_limit",
+             "nav2_msgs/msg/SpeedLimit", "{speed_limit: 0.001, percentage: true}"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             preexec_fn=os.setsid
@@ -1190,20 +1246,33 @@ def pauseMission():
 
 @app.route("/mission/resume", methods=["POST"])
 def resumeMission():
-    """Resume the running mission by deleting the pause flag."""
+    """Resume the running mission by deleting the pause flag and releasing the speed limit."""
     if os.path.exists(PAUSE_FLAG_FILE):
         try:
             os.remove(PAUSE_FLAG_FILE)
             _update_mission_history_status("Active")
         except Exception as e:
             return jsonify({"status": "error", "message": f"Could not resume: {e}"}), 500
+
+    # Restore full speed (cancel speed limit)
+    try:
+        subprocess.Popen(
+            ["ros2", "topic", "pub", "--once", "/speed_limit",
+             "nav2_msgs/msg/SpeedLimit", "{speed_limit: 0.0, percentage: true}"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            preexec_fn=os.setsid
+        )
+    except Exception:
+        pass
+
     return jsonify({"status": "mission_resumed"})
 
 
 @app.route("/mission/stop", methods=["POST"])
 def stopMission():
     """Stop the running mission.
-    Kills mission_runner immediately and fires a non-blocking Nav2 cancel.
+    Kills mission_runner immediately, releases any speed limit, and cancels Nav2 task.
     """
     global mission_process
     kill_process(mission_process)
@@ -1217,7 +1286,15 @@ def stopMission():
 
     _update_mission_history_status("Stopped")
 
+    # Release any speed limit and cancel navigation goal
     try:
+        subprocess.Popen(
+            ["ros2", "topic", "pub", "--once", "/speed_limit",
+             "nav2_msgs/msg/SpeedLimit", "{speed_limit: 0.0, percentage: true}"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            preexec_fn=os.setsid
+        )
         subprocess.Popen(
             ["ros2", "action", "cancel", "/navigate_to_pose"],
             stdout=subprocess.DEVNULL,
