@@ -514,7 +514,9 @@ function togglePauseMission() {
 /* Poll Timer and loop status check */
 var _pollTimer = null;
 var _elapsedTicker = null;
-var _missionStartEpoch = 0;   // local epoch when mission started (ms)
+var _missionStartEpoch    = 0;   // kept for session restore; not used for display
+var _missionServerElapsed = 0;   // last elapsed_seconds received from server
+var _missionLastPollMs    = 0;   // Date.now() when last poll arrived
 
 function _fmtTime(seconds) {
   seconds = Math.max(0, Math.round(seconds));
@@ -524,7 +526,9 @@ function _fmtTime(seconds) {
 }
 
 function _updateElapsedUI() {
-  var elapsed = Math.round((Date.now() - _missionStartEpoch) / 1000);
+  // Use server epoch as baseline; interpolate by 1s between polls
+  var elapsed = _missionServerElapsed + Math.round((Date.now() - _missionLastPollMs) / 1000);
+  elapsed = Math.max(0, elapsed);
   var t = _fmtTime(elapsed);
   var el1 = document.getElementById('mission-elapsed-label');
   var el2 = document.getElementById('mission-elapsed-time');
@@ -533,59 +537,102 @@ function _updateElapsedUI() {
 }
 
 function _updateProgressUI(d) {
-  /* Cycle bar */
-  var totalCycles = d.total_cycles;
-  var currentCycle = d.cycle || 0;
-  var cycleText   = document.getElementById('mission-cycle-text');
-  var cycleBar    = document.getElementById('mission-cycle-bar');
-  var cyclesLeft  = document.getElementById('mission-cycles-left');
-  if (totalCycles === -1 || totalCycles === undefined) {
-    if (cycleText) cycleText.textContent = currentCycle + ' / ∞';
-    if (cycleBar)  cycleBar.style.width = '0%';
-    if (cyclesLeft) cyclesLeft.textContent = '∞';
-  } else {
-    if (cycleText) cycleText.textContent = currentCycle + ' / ' + totalCycles;
-    if (cycleBar)  cycleBar.style.width = (totalCycles > 0 ? Math.min(100, (currentCycle / totalCycles) * 100) : 0) + '%';
-    if (cyclesLeft) cyclesLeft.textContent = Math.max(0, totalCycles - currentCycle);
+  var totalCycles  = d.total_cycles;          // -1 = infinite
+  var currentCycle = d.cycle   || 0;
+  var totalWps     = d.total_wps || 0;
+  var currentWp    = d.waypoint || 0;
+  var elapsed      = d.elapsed_seconds || 0;
+
+  // ── Sync elapsed ticker to server truth ─────────────────────────────────
+  _missionServerElapsed = elapsed;
+  _missionLastPollMs    = Date.now();
+
+  // ── Cycle bar ─────────────────────────────────────────────────────────────
+  var cycleBar      = document.getElementById('mission-cycle-bar');
+  var cycleBarLabel = document.getElementById('mission-cycle-bar-label');
+  var cyclePct      = document.getElementById('mission-cycle-pct');
+  var cycleThumb    = document.getElementById('mission-cycle-thumb');
+  var cyclesLeft    = document.getElementById('mission-cycles-left');
+
+  var cyclePctVal = 0;
+  if (totalCycles > 0) {
+    // Completed cycles = currentCycle (runner writes cycle number AFTER reaching wp1)
+    // e.g. cycle=1 of 2 total = 50%
+    cyclePctVal = Math.min(100, Math.round((currentCycle / totalCycles) * 100));
   }
 
-  /* Waypoint bar */
-  var totalWps = d.total_wps || 0;
-  var currentWp = d.waypoint || 0;
-  var wpText  = document.getElementById('mission-wp-text');
-  var wpBar   = document.getElementById('mission-wp-bar');
-  var wpName  = document.getElementById('mission-wp-name');
-  if (wpText) wpText.textContent = currentWp + ' / ' + totalWps;
-  if (wpBar)  wpBar.style.width = (totalWps > 0 ? Math.min(100, (currentWp / totalWps) * 100) : 0) + '%';
-  if (wpName) wpName.textContent = d.waypoint_name || '—';
+  if (cycleBar)      cycleBar.style.width = cyclePctVal + '%';
+  if (cyclePct)      cyclePct.textContent  = cyclePctVal + '%';
+  if (cycleBarLabel) {
+    if (totalCycles === -1) {
+      cycleBarLabel.textContent = 'Cycle ' + currentCycle + '  (∞)';
+    } else {
+      cycleBarLabel.textContent = currentCycle + ' of ' + totalCycles + ' complete';
+    }
+  }
+  // Show white thumb when bar has any fill
+  if (cycleThumb) cycleThumb.style.display = (cyclePctVal > 0) ? 'inline-block' : 'none';
+  if (cyclesLeft) {
+    cyclesLeft.textContent = totalCycles === -1 ? '∞' : Math.max(0, totalCycles - currentCycle);
+  }
 
-  /* Bottom badge */
+  // ── Waypoint bar ──────────────────────────────────────────────────────────
+  var wpBar      = document.getElementById('mission-wp-bar');
+  var wpBarLabel = document.getElementById('mission-wp-bar-label');
+  var wpPct      = document.getElementById('mission-wp-pct');
+  var wpName     = document.getElementById('mission-wp-name');
+
+  var wpPctVal = totalWps > 0 ? Math.min(100, Math.round((currentWp / totalWps) * 100)) : 0;
+  if (wpBar)      wpBar.style.width   = wpPctVal + '%';
+  if (wpPct)      wpPct.textContent   = wpPctVal + '%';
+  if (wpBarLabel) wpBarLabel.textContent = currentWp + ' / ' + totalWps + (totalWps > 0 ? ' wp' : '');
+  if (wpName)     wpName.textContent  = d.waypoint_name || '';
+
+  // ── Time / Estimated remaining ────────────────────────────────────────────
+  var estEl = document.getElementById('mission-est-remaining');
+  var timeBar      = document.getElementById('mission-time-bar');
+  var timeBarLabel = document.getElementById('mission-time-bar-label');
+
+  var timePctVal = 0;
+  var remSec     = 0;
+
+  if (totalCycles > 0 && currentCycle > 0 && elapsed > 0) {
+    // sec-per-completed-cycle × remaining-cycles = estimated remaining
+    var secPerCycle = elapsed / currentCycle;
+    remSec = Math.round((totalCycles - currentCycle) * secPerCycle);
+    var totalEstSec = elapsed + remSec;
+    timePctVal = totalEstSec > 0 ? Math.min(100, Math.round((elapsed / totalEstSec) * 100)) : 0;
+  }
+
+  if (timeBar)      timeBar.style.width = timePctVal + '%';
+  if (timeBarLabel) {
+    if (remSec > 0) {
+      timeBarLabel.textContent = _fmtTime(elapsed) + '  /  est. ' + _fmtTime(elapsed + remSec);
+    } else if (totalCycles === -1) {
+      timeBarLabel.textContent = 'Elapsed ' + _fmtTime(elapsed);
+    } else {
+      timeBarLabel.textContent = '—';
+    }
+  }
+  if (estEl) estEl.textContent = remSec > 0 ? _fmtTime(remSec) : '—';
+
+  // ── Bottom badge (bottom bar) ─────────────────────────────────────────────
   var badge = document.getElementById('mission-progress-badge');
   if (badge) badge.textContent = currentCycle + ' / ' + (totalCycles === -1 ? '∞' : totalCycles);
 
-  /* Active map name */
+  // ── Active map name ───────────────────────────────────────────────────────
   var mapName = document.getElementById('missions-map-name');
   if (mapName && d.map) mapName.textContent = d.map;
 
-  /* Estimated remaining */
-  var estEl = document.getElementById('mission-est-remaining');
-  if (estEl && totalCycles > 0 && currentCycle > 0 && d.elapsed_seconds > 0) {
-    var secPerCycle = d.elapsed_seconds / currentCycle;
-    var remSec = (totalCycles - currentCycle) * secPerCycle;
-    estEl.textContent = _fmtTime(Math.round(remSec));
-  } else if (estEl) {
-    estEl.textContent = '—';
-  }
-
-  /* Paused / running state label */
+  // ── Running / Paused state indicator ─────────────────────────────────────
   var stateLabel = document.getElementById('mission-run-state-label');
   var pulseDot   = document.getElementById('mission-pulse-dot');
   if (d.paused) {
-    if (stateLabel) { stateLabel.textContent = 'PAUSED'; stateLabel.style.color = 'var(--yellow)'; }
-    if (pulseDot) { pulseDot.style.background = 'var(--yellow)'; pulseDot.style.boxShadow = '0 0 6px var(--yellow)'; pulseDot.style.animation = 'none'; }
+    if (stateLabel) { stateLabel.textContent = 'PAUSED';  stateLabel.style.color = 'var(--yellow)'; }
+    if (pulseDot)  { pulseDot.style.background = 'var(--yellow)'; pulseDot.style.boxShadow = '0 0 6px var(--yellow)'; pulseDot.style.animation = 'none'; }
   } else {
     if (stateLabel) { stateLabel.textContent = 'RUNNING'; stateLabel.style.color = 'var(--green)'; }
-    if (pulseDot) { pulseDot.style.background = 'var(--green)'; pulseDot.style.boxShadow = '0 0 6px var(--green)'; pulseDot.style.animation = 'pulse 1.2s infinite'; }
+    if (pulseDot)  { pulseDot.style.background = 'var(--green)';  pulseDot.style.boxShadow = '0 0 8px var(--green)';  pulseDot.style.animation = 'pulse 1.2s infinite'; }
   }
 }
 

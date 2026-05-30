@@ -1173,15 +1173,14 @@ def startMission():
     progress_file = os.path.join(MISSION_FOLDER, "mission_progress.json")
     try:
         with open(progress_file, "w") as f:
-            import json as _json
-            _json.dump({"cycle": 0, "waypoint": 0, "waypoint_name": ""}, f)
+            json.dump({"cycle": 0, "waypoint": 0, "waypoint_name": ""}, f)
     except Exception:
         pass
 
     data = request.json or {}
     cycles = data.get("cycles", -1)
 
-    # Parse waypoints names for the history log
+    # Parse waypoints for history log and meta
     waypoints = []
     total_wps = 0
     try:
@@ -1194,13 +1193,22 @@ def startMission():
 
     _add_mission_history(active_map_yaml, waypoints, cycles)
 
-    # Save metadata for status polling
+    import time as _time
     mission_meta = {
         "cycles": cycles,
         "total_wps": total_wps,
+        "waypoint_names": waypoints,
         "map": active_map_yaml or "",
-        "start_time": __import__("time").time(),
+        "start_time": _time.time(),
     }
+
+    # ── Persist meta to disk so it survives server restarts ───────────────────
+    meta_file = os.path.join(MISSION_FOLDER, "mission_meta.json")
+    try:
+        with open(meta_file, "w") as f:
+            json.dump(mission_meta, f)
+    except Exception:
+        pass
 
     cmd = ["python3", RUNNER_SCRIPT]
     if cycles != -1:
@@ -1353,15 +1361,26 @@ def stopMission():
 
 @app.route("/mission/status", methods=["GET"])
 def missionStatus():
-    """Check if mission_runner is running and if it is paused. Returns rich progress info."""
+    """Check mission runner status with full rich progress info."""
     global mission_process, mission_meta
+    import time as _time
     running = mission_process is not None and mission_process.poll() is None
     paused = os.path.exists(PAUSE_FLAG_FILE)
-    
-    # If the process completed by itself, update history to Completed!
+
+    # If the process completed by itself, update history to Completed
     if not running and mission_process is not None:
         _update_mission_history_status("Completed")
         mission_process = None
+
+    # ── Restore meta from disk if in-memory meta is stale (server restart) ────
+    meta_file = os.path.join(MISSION_FOLDER, "mission_meta.json")
+    if running and mission_meta.get("total_wps", 0) == 0:
+        try:
+            if os.path.exists(meta_file):
+                with open(meta_file) as f:
+                    mission_meta = json.load(f)
+        except Exception:
+            pass
 
     # Read live progress written by mission_runner.py
     progress = {"cycle": 0, "waypoint": 0, "waypoint_name": ""}
@@ -1374,8 +1393,8 @@ def missionStatus():
         pass
 
     elapsed = 0
-    if running and mission_meta.get("start_time"):
-        elapsed = int(__import__("time").time() - mission_meta["start_time"])
+    if mission_meta.get("start_time"):
+        elapsed = int(_time.time() - mission_meta["start_time"])
 
     return jsonify({
         "running": running,
@@ -1385,6 +1404,7 @@ def missionStatus():
         "waypoint_name": progress.get("waypoint_name", ""),
         "total_cycles": mission_meta.get("cycles", -1),
         "total_wps": mission_meta.get("total_wps", 0),
+        "waypoint_names": mission_meta.get("waypoint_names", []),
         "map": mission_meta.get("map", ""),
         "elapsed_seconds": elapsed,
     })
