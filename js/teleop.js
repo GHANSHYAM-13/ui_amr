@@ -156,12 +156,15 @@ window.eStop = function() {
       }
     }, 50); // Publish at 20Hz
     
-    // 2. Stop running mission via backend
+    // 2. Stop running mission via backend and explicitly cancel any direct Nav2 goal
     fetch(SERVER_URL + "/mission/stop", { method: "POST" })
       .then(function() { 
         if (typeof showToast === "function") showToast("Mission Cancelled", "info"); 
       })
       .catch(function(e) { console.error("eStop mission stop error:", e); });
+      
+    fetch(SERVER_URL + "/cancel_goal", { method: "POST" })
+      .catch(function(e) { console.error("eStop nav cancel error:", e); });
       
     // 3. Update UI
     var btnStart = document.getElementById("btn-start-mission");
