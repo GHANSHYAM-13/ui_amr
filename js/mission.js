@@ -115,18 +115,39 @@ function renderWpList() {
 var _dragIdx = null;
 function wpDragStart(e, idx) { _dragIdx = idx; e.currentTarget.classList.add("wp-dragging"); e.dataTransfer.effectAllowed = "move"; }
 function wpDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect = "move"; document.querySelectorAll(".wp-item").forEach(function (el) { el.classList.remove("wp-drag-over"); }); e.currentTarget.classList.add("wp-drag-over"); }
-function wpDrop(e, toIdx) { e.preventDefault(); if (_dragIdx === null || _dragIdx === toIdx) return; var moved = waypoints.splice(_dragIdx, 1)[0]; waypoints.splice(toIdx, 0, moved); renderWpList(); redrawWaypointMarkers(); saveMissionFile(); }
+function wpDrop(e, toIdx) { e.preventDefault(); if (_dragIdx === null || _dragIdx === toIdx) return; var moved = waypoints.splice(_dragIdx, 1)[0]; waypoints.splice(toIdx, 0, moved); renderWpList(); redrawWaypointMarkers(); saveMissionFile().catch(function () { }); }
 function wpDragEnd() { _dragIdx = null; document.querySelectorAll(".wp-item").forEach(function (el) { el.classList.remove("wp-dragging"); el.classList.remove("wp-drag-over"); }); }
-function setWpDelay(idx, val) { waypoints[idx].delay = Math.max(0, parseFloat(val) || 0); saveMissionFile(); }
-function removeWaypoint(idx) { waypoints.splice(idx, 1); renderWpList(); redrawWaypointMarkers(); saveMissionFile(); }
-function clearWaypoints() { waypoints = []; renderWpList(); redrawWaypointMarkers(); showToast("🗑 Waypoints cleared", "info"); }
+function setWpDelay(idx, val) { waypoints[idx].delay = Math.max(0, parseFloat(val) || 0); saveMissionFile().catch(function () { }); }
+function removeWaypoint(idx) { waypoints.splice(idx, 1); renderWpList(); redrawWaypointMarkers(); saveMissionFile({ notify: true }).catch(function () { }); }
+function clearWaypoints() {
+  waypoints = [];
+  renderWpList();
+  redrawWaypointMarkers();
+  saveMissionFile({ notify: true }).catch(function () { });
+  showToast("🗑 Waypoints cleared", "info");
+}
 
-function saveMissionFile() {
-  fetch(SERVER_URL + "/mission/save", {
+function saveMissionFile(opts) {
+  opts = opts || {};
+  return fetch(SERVER_URL + "/mission/save", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ waypoints: waypoints })
-  }).catch(function () { });
+  })
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function (data) {
+      if (data.status !== "mission_saved") throw new Error(data.message || "save failed");
+      if (opts.notify) showToast("💾 Mission saved (" + data.count + " spots)", "success");
+      return data;
+    })
+    .catch(function (err) {
+      console.error("Mission save failed:", err);
+      showToast("⚠ Mission save failed: " + err.message, "error");
+      throw err;
+    });
 }
 
 /* Update slider text dynamically */
@@ -422,12 +443,7 @@ function startMission() {
 
   showToast("🚀 Initiating Waypoint Mission...", "info");
 
-  fetch(SERVER_URL + "/mission/save", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ waypoints: waypoints })
-  })
-    .then(function (r) { return r.json(); })
+  saveMissionFile()
     .then(function () {
       return fetch(SERVER_URL + "/mission/start", {
         method: "POST",
@@ -560,16 +576,14 @@ function enableMissionButtons() {
 /* UI transition modifiers */
 function _uiRunning() {
   var bs = document.getElementById("btn-start-mission");
-  var bst = document.getElementById("btn-stop-mission");
-  var bp = document.getElementById("btn-pause-mission");
+  var mrc = document.getElementById("mission-running-controls");
   var indicators = document.getElementById("mission-status-badge");
 
   var cycleInput = document.getElementById("mission-cycle-input");
   var cycleInfinite = document.getElementById("mission-cycle-infinite");
 
   if (bs) bs.style.display = "none";
-  if (bst) bst.style.display = "block";
-  if (bp) bp.style.display = "block";
+  if (mrc) mrc.style.display = "flex";
   if (indicators) indicators.style.display = "flex";
 
   if (cycleInput) cycleInput.disabled = true;
@@ -578,16 +592,14 @@ function _uiRunning() {
 
 function _uiStopped() {
   var bs = document.getElementById("btn-start-mission");
-  var bst = document.getElementById("btn-stop-mission");
-  var bp = document.getElementById("btn-pause-mission");
+  var mrc = document.getElementById("mission-running-controls");
   var indicators = document.getElementById("mission-status-badge");
 
   var cycleInput = document.getElementById("mission-cycle-input");
   var cycleInfinite = document.getElementById("mission-cycle-infinite");
 
-  if (bs) { bs.style.display = "block"; bs.disabled = (waypoints.length === 0); }
-  if (bst) bst.style.display = "none";
-  if (bp) bp.style.display = "none";
+  if (bs) { bs.style.display = "flex"; bs.disabled = (waypoints.length === 0); }
+  if (mrc) mrc.style.display = "none";
   if (indicators) indicators.style.display = "none";
 
   if (cycleInput && !(cycleInfinite && cycleInfinite.checked)) {
@@ -683,10 +695,13 @@ window.saveNamedMissionPrompt = function() {
     return;
   }
   
-  fetch(SERVER_URL + "/mission/save_named", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: name, waypoints: waypoints })
+  saveMissionFile()
+  .then(function() {
+    return fetch(SERVER_URL + "/mission/save_named", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: name, waypoints: waypoints })
+    });
   })
   .then(function(r) {
     if (!r.ok) throw new Error("HTTP " + r.status);

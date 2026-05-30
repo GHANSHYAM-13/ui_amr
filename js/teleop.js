@@ -24,8 +24,8 @@ function getAngularSpeed() {
 function publishVel(linX, angZ) {
   if (!cmdVel) return;   /* ROS not connected yet — silently ignore */
   cmdVel.publish(new ROSLIB.Message({
-    linear:  { x: linX, y: 0.0, z: 0.0 },
-    angular: { x: 0.0,  y: 0.0, z: angZ }
+    linear: { x: linX, y: 0.0, z: 0.0 },
+    angular: { x: 0.0, y: 0.0, z: angZ }
   }));
 }
 function stop() { publishVel(0, 0); }
@@ -36,9 +36,9 @@ function stop() { publishVel(0, 0); }
  * This keeps motor.py watchdog (0.5 s) fed so robot never stops mid-press.
  * On release: clearInterval → stop publishing → motor.py stops robot.
  * ---------------------------------------------------------------------- */
-var _velInterval  = null;   /* active interval handle     */
-var _velLinX      = 0;      /* current linear  velocity   */
-var _velAngZ      = 0;      /* current angular velocity   */
+var _velInterval = null;   /* active interval handle     */
+var _velLinX = 0;      /* current linear  velocity   */
+var _velAngZ = 0;      /* current angular velocity   */
 
 /* ---------- MISSION TELEOP LOCK ----------------------------------------
  * While a mission is running, Nav2's controller_server owns cmd_vel.
@@ -82,10 +82,10 @@ function _stopContinuous() {
 
 
 /* ---------- DIRECTION FUNCTIONS (called by buttons + keyboard) --------- */
-function forward() { _startContinuous( getLinearSpeed(),  0); }
-function back()    { _startContinuous(-getLinearSpeed(),  0); }
-function left()    { _startContinuous( 0,  getAngularSpeed()); }
-function right()   { _startContinuous( 0, -getAngularSpeed()); }
+function forward() { _startContinuous(getLinearSpeed(), 0); }
+function back() { _startContinuous(-getLinearSpeed(), 0); }
+function left() { _startContinuous(0, getAngularSpeed()); }
+function right() { _startContinuous(0, -getAngularSpeed()); }
 
 /* Hard stop — used by stop button (■) and spacebar */
 function stopHard() {
@@ -108,18 +108,18 @@ document.addEventListener("keydown", function (e) {
   keysDown[e.key] = true;
 
   switch (e.key) {
-    case "ArrowUp":    case "w": case "W": forward();  break;
-    case "ArrowDown":  case "s": case "S": back();     break;
-    case "ArrowLeft":  case "a": case "A": left();     break;
-    case "ArrowRight": case "d": case "D": right();    break;
-    case " ":                              stopHard();  e.preventDefault(); break;
+    case "ArrowUp": case "w": case "W": forward(); break;
+    case "ArrowDown": case "s": case "S": back(); break;
+    case "ArrowLeft": case "a": case "A": left(); break;
+    case "ArrowRight": case "d": case "D": right(); break;
+    case " ": stopHard(); e.preventDefault(); break;
   }
 });
 
 document.addEventListener("keyup", function (e) {
   keysDown[e.key] = false;
-  var moveKeys = ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight",
-                  "w","a","s","d","W","A","S","D"];
+  var moveKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight",
+    "w", "a", "s", "d", "W", "A", "S", "D"];
   if (moveKeys.indexOf(e.key) !== -1) releaseButton();
 });
 

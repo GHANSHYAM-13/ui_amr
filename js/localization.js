@@ -194,6 +194,29 @@ function startLocalization() {
     window.showLoadingOverlay("Launching Navigation Stack & AMCL Localization...");
   }
 
+  /* Helper: wait for map to actually load before hiding the loading overlay.
+     The overlay stays visible until _mapFitted becomes true (map tile rendered),
+     or a 60s timeout occurs to prevent infinite loading.
+     Optional onDone callback fires after overlay is hidden. */
+  function _waitForMapThenHideOverlay(onDone) {
+    if (typeof window.hideLoadingOverlay !== "function") return;
+    var _mapWaitStart = Date.now();
+    var _mapWaitTimer = setInterval(function() {
+      var mapLoaded = (typeof _mapFitted !== "undefined" && _mapFitted && typeof mapBitmap !== "undefined" && mapBitmap !== null);
+      var timedOut = (Date.now() - _mapWaitStart) > 60000;
+      if (mapLoaded || timedOut) {
+        clearInterval(_mapWaitTimer);
+        window.hideLoadingOverlay();
+        if (mapLoaded) {
+          showToast("✅ Navigation stack ready — map loaded!", "success");
+        } else {
+          showToast("⚠ Map load timed out — Nav2 may still be starting", "warn");
+        }
+        if (typeof onDone === "function") setTimeout(onDone, 400);
+      }
+    }, 500);
+  }
+
   fetch(SERVER_URL + "/start_localization", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -201,16 +224,20 @@ function startLocalization() {
   })
     .then(function(r) { return r.json(); })
     .then(function (d) {
-      if (typeof window.hideLoadingOverlay === "function") window.hideLoadingOverlay();
-      showToast("⏳ Nav2 warming up (~15s)...", "info");
-
       robotLayer.visible = true;
       laserLayer.visible = true;
       startLivePosePolling();
 
       if (d && (d.navigation_active || d.status === "localization_already_running")) {
+        /* Already running — map should be available quickly, wait for it */
+        _waitForMapThenHideOverlay();
         _fetchLatestRobotPose(true);
         return;
+      }
+
+      /* Fresh start — keep loading overlay up until map appears */
+      if (typeof window.showLoadingOverlay === "function") {
+        window.showLoadingOverlay("Waiting for Nav2 map server to publish map...");
       }
 
       var saved = _loadLastPose();
@@ -218,6 +245,7 @@ function startLocalization() {
         /* REFRESH — restore last known position on canvas immediately */
         _applyRobotPose(saved.x, saved.y, saved.yaw, true);
         _publishPoseWhenReady(saved);
+        _waitForMapThenHideOverlay();
       } else {
         /* FRESH START — spawn robot at home position (0, 0, 0) automatically
            and publish to AMCL once it is ready. User can refine later with
@@ -225,7 +253,12 @@ function startLocalization() {
         var homePose = { x: 0, y: 0, yaw: 0 };
         _applyRobotPose(0, 0, 0, true);
         _publishPoseWhenReady(homePose);
-        showToast("🤖 Robot spawned at home — use 🎯 FIX ROBOT POSITION if needed", "info");
+        /* Show the big "Fix Robot Position" modal after map loads */
+        _waitForMapThenHideOverlay(function() {
+          if (typeof window.showFixPoseModal === "function") {
+            window.showFixPoseModal();
+          }
+        });
       }
 
       if (typeof redrawOverlay === "function") redrawOverlay();
@@ -265,8 +298,7 @@ function enablePoseEstimate() {
 /* ---------- ENABLE GOAL POSE MODE ---------- */
 
 function enableCancelGoal() {
-  var btn = document.getElementById("btn-cancel-goal");
-  if (btn) btn.disabled = false;
+  /* No-op: global E-STOP button in topbar is always available */
 }
 
 /* ---------- GET CURRENT LOCATION AS WAYPOINT ---------- */
@@ -302,7 +334,7 @@ function getLocationAsWaypoint() {
   /* Refresh UI */
   if (typeof renderWpList          === "function") renderWpList();
   if (typeof redrawWaypointMarkers === "function") redrawWaypointMarkers();
-  if (typeof saveMissionFile       === "function") saveMissionFile();
+  if (typeof saveMissionFile       === "function") saveMissionFile({ notify: true }).catch(function () { });
 
   showToast("📍 Added waypoint: " + name, "success");
 }
@@ -498,7 +530,7 @@ function _onMapPointerUp(e) {
     document.getElementById("wp-name").value = "";
     renderWpList();
     redrawWaypointMarkers();
-    saveMissionFile();
+    saveMissionFile({ notify: true }).catch(function () { });
     showToast("📍 Added: " + name, "success");
 
   /* --- POSE ESTIMATE branch --- */

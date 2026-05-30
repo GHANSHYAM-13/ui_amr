@@ -1016,16 +1016,23 @@ def getMission():
 @app.route("/mission/save", methods=["POST"])
 def saveMission():
     """Save the full waypoints list sent from the frontend."""
-    data = request.json          # { "waypoints": [...] }
-    with open(MISSION_FILE, "w") as f:
-        json.dump(data, f, indent=2)
-    return jsonify({"status": "mission_saved", "count": len(data.get("waypoints", []))})
+    data = request.get_json(silent=True) or {}
+    waypoints = data.get("waypoints", [])
+    if not isinstance(waypoints, list):
+        return jsonify({"status": "error", "message": "waypoints must be a list"}), 400
+    os.makedirs(MISSION_FOLDER, exist_ok=True)
+    tmp_file = MISSION_FILE + ".tmp"
+    payload = {"waypoints": waypoints}
+    with open(tmp_file, "w") as f:
+        json.dump(payload, f, indent=2)
+    os.replace(tmp_file, MISSION_FILE)
+    return jsonify({"status": "mission_saved", "count": len(waypoints), "path": MISSION_FILE})
 
 
 @app.route("/mission/save_named", methods=["POST"])
 def saveNamedMission():
     """Save a mission with a custom name."""
-    data = request.json
+    data = request.get_json(silent=True) or {}
     name = data.get("name", "").strip()
     if not name:
         return jsonify({"status": "error", "message": "Name is required"}), 400
@@ -1035,9 +1042,15 @@ def saveNamedMission():
     if not safe_name.endswith(".json"):
         safe_name += ".json"
     
+    waypoints = data.get("waypoints", [])
+    if not isinstance(waypoints, list) or not waypoints:
+        return jsonify({"status": "error", "message": "No waypoints to save"}), 400
+    os.makedirs(MISSION_FOLDER, exist_ok=True)
     file_path = os.path.join(MISSION_FOLDER, safe_name)
-    with open(file_path, "w") as f:
-        json.dump({"waypoints": data.get("waypoints", [])}, f, indent=2)
+    tmp_file = file_path + ".tmp"
+    with open(tmp_file, "w") as f:
+        json.dump({"waypoints": waypoints}, f, indent=2)
+    os.replace(tmp_file, file_path)
     return jsonify({"status": "success", "name": safe_name[:-5]})
 
 
@@ -1166,9 +1179,13 @@ def startMission():
     if cycles != -1:
         cmd += ["--cycles", str(cycles)]
 
+    ros_env = os.environ.copy()
+    ros_env["ROS_DOMAIN_ID"] = ros_env.get("ROS_DOMAIN_ID", "0")
+
     mission_process = subprocess.Popen(
         cmd,
-        preexec_fn=os.setsid
+        preexec_fn=os.setsid,
+        env=ros_env
     )
     return jsonify({"status": "mission_started"})
 

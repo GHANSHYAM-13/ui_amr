@@ -1927,6 +1927,17 @@
         <span id="battery-voltage" style="display:none;"></span>
         <div class="topbar-sep"></div>
         <div class="topbar-sep"></div>
+        <!-- Global E-STOP — always visible on every tab -->
+        <button id="btn-global-estop" onclick="cancelGoal()" title="Emergency Stop — Cancel all navigation"
+          style="padding:6px 14px;font-size:12px;font-weight:700;border-radius:6px;
+               border:2px solid #ef4444;background:rgba(239,68,68,0.18);color:#ef4444;
+               cursor:pointer;font-family:var(--font-head);letter-spacing:1px;
+               box-shadow:0 0 8px rgba(239,68,68,0.25);transition:all 0.15s;"
+          onmouseover="this.style.background='rgba(239,68,68,0.35)';this.style.boxShadow='0 0 16px rgba(239,68,68,0.45)'"
+          onmouseout="this.style.background='rgba(239,68,68,0.18)';this.style.boxShadow='0 0 8px rgba(239,68,68,0.25)'">
+          ⛔ E-STOP
+        </button>
+        <div class="topbar-sep"></div>
         <!-- Start/Stop Robot -->
         <button id="btn-start-robot" onclick="toggleRobot()" style="padding:6px 14px;font-size:12px;font-weight:700;border-radius:6px;
                border:1px solid #22c55e;background:rgba(34,197,94,0.12);color:#22c55e;
@@ -2144,7 +2155,7 @@
                 POSITION</button>
               <button class="btn-goal" id="btn-goal" onclick="enableGoalPose()" disabled>🟢 GO TO POINT</button>
               <button class="btn-home" id="btn-home" onclick="goHome()" disabled>🏠 RETURN TO BASE</button>
-              <button class="btn-warn" id="btn-cancel-goal" onclick="cancelGoal()" disabled>⛔ STOP MOVING</button>
+              <!-- STOP MOVING removed — global E-STOP in topbar covers this -->
               <button id="btn-dock" onclick="toggleDock()" style="display:block;width:100%;padding:10px 14px;font-weight:600;margin-bottom:5px;
                      border-radius:7px;cursor:pointer;transition:all 0.15s;font-family:var(--font-body);font-size:13px;
                      background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.4);color:var(--green);">
@@ -3057,7 +3068,7 @@
       }
     }
 
-    /* ── Goal status monitoring — disable Cancel Goal when goal reached ── */
+    /* ── Goal status monitoring — show toast when goal reached ── */
     (function () {
       var _goalStatusTopic = null;
       function _initGoalStatus() {
@@ -3071,11 +3082,7 @@
           var statuses = msg.status_list || [];
           /* STATUS_EXECUTING=2, STATUS_SUCCEEDED=4, STATUS_ABORTED=6, STATUS_CANCELED=5 */
           var hasActive = statuses.some(function (s) { return s.status === 2 || s.status === 1; });
-          var btn = document.getElementById('btn-cancel-goal');
-          if (!btn) return;
           if (!hasActive && statuses.length > 0) {
-            /* All goals finished — disable cancel */
-            btn.disabled = true;
             var lastStatus = statuses[statuses.length - 1].status;
             if (lastStatus === 4) showToast('✅ Goal reached!', 'success');
           }
@@ -3145,6 +3152,10 @@
             showToast('⚠ Failed to start robot drivers', 'error');
           });
       } else {
+        if (typeof mapMode !== 'undefined' && mapMode === 'localization') {
+          showToast('⚠ Please stop localization first before stopping the robot', 'error');
+          return;
+        }
         if (typeof window.showWarningModal === 'function') {
           window.showWarningModal("EMERGENCY SHUTDOWN", "Are you sure you want to stop the robot bringup? This shuts down all onboard drivers and LiDAR scanners.", function () {
             if (typeof window.showLoadingOverlay === 'function') window.showLoadingOverlay("Stopping Robot Bringup Stack...");
@@ -3470,120 +3481,7 @@
       LOADING SYSTEM STATE...</div>
   </div>
 
-  <!-- System Boot Initialization Overlay (10 Seconds) -->
-  <div id="boot-loader-overlay"
-    style="position:fixed;inset:0;z-index:100000;background:radial-gradient(circle at center, #0f172a, #020617);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font-body);color:#fff;overflow:hidden;">
-    <div
-      style="text-align:center;max-width:550px;width:90%;padding:40px;background:rgba(15,23,42,0.6);border:1px solid rgba(167,139,250,0.25);border-radius:24px;box-shadow:0 25px 50px -12px rgba(0,0,0,0.7), 0 0 40px rgba(167,139,250,0.15);backdrop-filter:blur(12px);position:relative;">
-      <!-- High-tech rotating rings -->
-      <div style="position:relative;width:120px;height:120px;margin:0 auto 30px;">
-        <div
-          style="position:absolute;inset:0;border:4px dashed rgba(167,139,250,0.2);border-radius:50%;animation:spin 15s linear infinite;">
-        </div>
-        <div
-          style="position:absolute;inset:10px;border:3px solid transparent;border-top-color:var(--accent);border-radius:50%;animation:spin 2s linear infinite;">
-        </div>
-        <div
-          style="position:absolute;inset:20px;border:2px dashed rgba(59,130,246,0.3);border-radius:50%;animation:spin 6s linear reverse infinite;">
-        </div>
-        <div id="boot-percent"
-          style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--accent);text-shadow:0 0 10px rgba(167,139,250,0.5);">
-          0%</div>
-      </div>
-      <div
-        style="font-family:var(--font-head);font-size:16px;font-weight:900;letter-spacing:3px;color:#fff;text-transform:uppercase;margin-bottom:6px;">
-        ROBOMUSE SYSTEM CORE BOOT
-      </div>
-      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:24px;">
-        HMI VERSION 4.2.0 • INDUSTRIAL CONSOLE
-      </div>
-      <!-- Linear Progress Bar -->
-      <div
-        style="width:100%;height:6px;background:rgba(255,255,255,0.05);border-radius:10px;margin-bottom:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.05);">
-        <div id="boot-progress-bar"
-          style="width:0%;height:100%;background:linear-gradient(90deg, #3b82f6, var(--accent));border-radius:10px;transition:width 0.1s linear;box-shadow:0 0 12px var(--accent);">
-        </div>
-      </div>
-      <!-- Terminal-style feedback logs -->
-      <div id="boot-log-container"
-        style="width:100%;height:110px;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 16px;font-family:monospace;font-size:11px;color:#cbd5e1;text-align:left;overflow-y:auto;line-height:1.6;scrollbar-width:none;">
-        <div style="color:var(--accent);font-weight:bold;">[SYSTEM] Initializing Robomuse kernel...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Boot Loader Controller Script -->
-  <script>
-    (function () {
-      var overlay = document.getElementById("boot-loader-overlay");
-      var percentText = document.getElementById("boot-percent");
-      var progressBar = document.getElementById("boot-progress-bar");
-      var logContainer = document.getElementById("boot-log-container");
-
-      if (!overlay || !percentText || !progressBar || !logContainer) return;
-
-      // Enable smooth opacity transitions
-      overlay.style.transition = "opacity 0.6s ease-in-out";
-      overlay.style.opacity = "1";
-
-      var logs = [
-        { time: 0, text: "[SYSTEM] Initializing Robomuse Core v4.2.0 kernel...", color: "var(--accent)" },
-        { time: 800, text: "[SYSTEM] Kernel booted. Loading environment settings from robot_config.js...", color: "" },
-        { time: 1500, text: "[HAL] Probing hardware buses & checking onboard peripheral devices...", color: "" },
-        { time: 2300, text: "[HAL] Identified LiDAR scanners on /dev/ttyUSB0 (Front) & /dev/ttyUSB1 (Rear).", color: "#3b82f6" },
-        { time: 3200, text: "[ROS] Connecting to rosbridge WebSocket server at ws://localhost:9090...", color: "" },
-        { time: 4200, text: "[ROS] Connected successfully! Subscribed to active topics: /merged_laser, /odom, /tf.", color: "var(--green)" },
-        { time: 5400, text: "[NAV2] Spawning costmap collision avoidance drivers and global path planners...", color: "" },
-        { time: 6600, text: "[SAFETY] Diagnosed battery pack: 26.4V (100% capacity) - Internal temperatures nominal.", color: "#10b981" },
-        { time: 7600, text: "[HMI] Initializing canvas maps viewport, zone definitions, and user settings...", color: "" },
-        { time: 8600, text: "[SYSTEM] Parsing offline map directories and caching localization coordinates...", color: "" },
-        { time: 9400, text: "[SYSTEM] Running self-test diagnostics & optimizing WebGL context... [OK]", color: "var(--accent)" },
-        { time: 10000, text: "[SYSTEM] Boot initialization complete. Launching AMR console.", color: "var(--green)" }
-      ];
-
-      var startTime = Date.now();
-      var duration = 10000; // 10 seconds
-
-      function appendLog(text, color) {
-        var div = document.createElement("div");
-        div.style.marginBottom = "4px";
-        if (color) div.style.color = color;
-        div.textContent = "[" + ((Date.now() - startTime) / 1000).toFixed(2) + "s] " + text;
-        logContainer.appendChild(div);
-        logContainer.scrollTop = logContainer.scrollHeight;
-      }
-
-      var logIndex = 0;
-
-      var interval = setInterval(function () {
-        var elapsed = Date.now() - startTime;
-        var pct = Math.min(100, Math.floor((elapsed / duration) * 100));
-
-        percentText.textContent = pct + "%";
-        progressBar.style.width = pct + "%";
-
-        // Append logs based on the elapsed time
-        while (logIndex < logs.length && elapsed >= logs[logIndex].time) {
-          var log = logs[logIndex];
-          if (logIndex === 0) {
-            logContainer.innerHTML = ""; // Clear initial static div
-          }
-          appendLog(log.text, log.color);
-          logIndex++;
-        }
-
-        if (elapsed >= duration) {
-          clearInterval(interval);
-          setTimeout(function () {
-            overlay.style.opacity = "0";
-            setTimeout(function () {
-              overlay.style.display = "none";
-            }, 600);
-          }, 300);
-        }
-      }, 50);
-    })();
-  </script>
+  <!-- Boot loader removed — no startup animation -->
 
   <!-- Admin & Settings Modal Overlay -->
   <div id="settings-overlay"
@@ -3669,6 +3567,67 @@
       </div>
     </div>
   </div>
+
+  <!-- Fix Robot Position Alert Modal (shown after localization map loads) -->
+  <div id="fix-pose-modal"
+    style="display:none;position:fixed;inset:0;z-index:10002;background:rgba(0,0,0,0.92);backdrop-filter:blur(10px);align-items:center;justify-content:center;font-family:var(--font-body);">
+    <div
+      style="background:linear-gradient(135deg, var(--panel), var(--panel2));border:2px solid rgba(249,115,22,0.6);border-radius:20px;width:520px;max-width:92vw;padding:36px 40px;box-shadow:0 0 50px rgba(249,115,22,0.25), 0 24px 80px rgba(0,0,0,0.95);text-align:center;position:relative;overflow:hidden;">
+      <!-- Animated pulse ring behind icon -->
+      <div style="position:relative;width:100px;height:100px;margin:0 auto 20px;">
+        <div style="position:absolute;inset:0;border:3px solid rgba(249,115,22,0.3);border-radius:50%;animation:pulse-accent 2s ease-in-out infinite;"></div>
+        <div style="position:absolute;inset:8px;border:2px solid rgba(249,115,22,0.15);border-radius:50%;animation:pulse-accent 2s ease-in-out infinite 0.3s;"></div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px;">🎯</div>
+      </div>
+      <div
+        style="font-family:var(--font-head);font-size:20px;font-weight:900;color:var(--accent2);margin-bottom:8px;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 15px rgba(249,115,22,0.4);">
+        FIX ROBOT POSITION
+      </div>
+      <div
+        style="font-family:var(--font-head);font-size:11px;font-weight:600;color:var(--muted);margin-bottom:18px;letter-spacing:2px;text-transform:uppercase;">
+        CRITICAL FIRST STEP — ACTION REQUIRED
+      </div>
+      <div
+        style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:12px;padding:16px 20px;margin-bottom:20px;text-align:left;">
+        <div style="font-size:14px;color:var(--text);line-height:1.7;font-weight:500;">
+          The robot has been placed at the <strong style="color:var(--accent);">default position (0, 0)</strong> on the map.
+          This is likely <strong style="color:var(--red);">NOT</strong> where the robot actually is.
+        </div>
+      </div>
+      <div
+        style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:14px 18px;margin-bottom:24px;">
+        <div style="font-size:13px;color:#fca5a5;line-height:1.6;">
+          <strong>⚠ Before navigation, you MUST:</strong><br>
+          Click <strong style="color:var(--accent2);">🎯 FIX ROBOT POSITION</strong> in the sidebar, then click & drag on the map
+          to set the robot's actual position and heading direction.
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:14px;">
+        <button onclick="dismissFixPoseModal()"
+          style="padding:12px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer;transition:all 0.15s;"
+          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          Skip for Now
+        </button>
+        <button onclick="dismissFixPoseModal(); if(typeof enablePoseEstimate==='function') enablePoseEstimate();"
+          style="padding:12px;background:linear-gradient(135deg, var(--accent2), #ea580c);color:#fff;border:none;border-radius:8px;font-weight:800;font-size:13px;letter-spacing:1px;box-shadow:0 4px 20px rgba(249,115,22,0.4);cursor:pointer;transition:all 0.15s;text-transform:uppercase;"
+          onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 28px rgba(249,115,22,0.5)'"
+          onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 20px rgba(249,115,22,0.4)'">
+          🎯 Fix Position Now
+        </button>
+      </div>
+    </div>
+  </div>
+  <script>
+    window.showFixPoseModal = function () {
+      var overlay = document.getElementById("fix-pose-modal");
+      if (overlay) overlay.style.display = "flex";
+    };
+    window.dismissFixPoseModal = function () {
+      var overlay = document.getElementById("fix-pose-modal");
+      if (overlay) overlay.style.display = "none";
+    };
+  </script>
 
   <!-- Warning / Confirmation Modal (Are you sure?) -->
   <div id="warning-modal"
