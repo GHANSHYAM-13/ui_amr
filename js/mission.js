@@ -167,6 +167,11 @@ function setWpDelay(idx, val) { waypoints[idx].delay = Math.max(0, parseFloat(va
 function removeWaypoint(idx) { waypoints.splice(idx, 1); renderWpList(); redrawWaypointMarkers(); saveMissionFile({ notify: true }).catch(function () { }); }
 function clearWaypoints() {
   waypoints = [];
+  window._currentMissionName = "";
+  var drop = document.getElementById("mission-select-dropdown");
+  if (drop) drop.value = "";
+  var tools = document.getElementById("mission-edit-tools");
+  if (tools) tools.style.display = "none";
   renderWpList();
   redrawWaypointMarkers();
   saveMissionFile({ notify: true }).catch(function () { });
@@ -965,10 +970,13 @@ window.loadSavedMissionsList = function() {
 };
 
 window.onSavedMissionSelected = function(val) {
+  var tools = document.getElementById("mission-edit-tools");
   if (!val) {
     window._currentMissionName = "";
+    if (tools) tools.style.display = "none";
     return;
   }
+  if (tools) tools.style.display = "flex";
   
   showToast("⏳ Loading mission config: " + val + "...", "info");
   fetch(SERVER_URL + "/mission/load_named", {
@@ -990,6 +998,61 @@ window.onSavedMissionSelected = function(val) {
   })
   .catch(function() {
     showToast("⚠ Network error loading named mission", "error");
+  });
+};
+
+window.overwriteLoadedMission = function() {
+  if (!window._currentMissionName) return;
+  if (waypoints.length === 0) {
+    showToast("⚠ Cannot save an empty mission", "error");
+    return;
+  }
+  
+  window.showWarningModal("OVERWRITE MISSION", "Are you sure you want to overwrite mission '" + window._currentMissionName + "'?", function() {
+    saveMissionFile().then(function() {
+      return fetch(SERVER_URL + "/mission/save_named", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: window._currentMissionName, waypoints: waypoints })
+      });
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === "success") {
+        showToast("✅ Mission '" + window._currentMissionName + "' updated!", "success");
+        if (typeof loadSavedMissionsList === "function") loadSavedMissionsList();
+      } else {
+        showToast("⚠ Failed to update mission", "error");
+      }
+    })
+    .catch(function(err) {
+      showToast("⚠ Error updating mission", "error");
+    });
+  });
+};
+
+window.deleteLoadedMission = function() {
+  if (!window._currentMissionName) return;
+  
+  window.showWarningModal("DELETE MISSION", "Are you sure you want to permanently delete mission '" + window._currentMissionName + "'?", function() {
+    fetch(SERVER_URL + "/mission/delete_named", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: window._currentMissionName })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status === "success") {
+        showToast("🗑 Mission '" + window._currentMissionName + "' deleted", "success");
+        clearWaypoints();
+        if (typeof loadSavedMissionsList === "function") loadSavedMissionsList();
+      } else {
+        showToast("⚠ Failed to delete mission", "error");
+      }
+    })
+    .catch(function(err) {
+      showToast("⚠ Error deleting mission", "error");
+    });
   });
 };
 

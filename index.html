@@ -2445,16 +2445,21 @@
           <button class="sidebar-toggle" id="toggle-missions" onclick="toggleSidebar('missions')"
             title="Toggle sidebar">◀</button>
 
-          <div class="sec-label">Select Saved Mission</div>
+          <div class="sec-label">Mission Management</div>
           <div class="sidebar-block" style="padding: 14px;">
-            <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 1.5px; margin-bottom: 8px; text-transform: uppercase;">Saved Missions</div>
+            <div style="display: flex; gap: 8px;">
               <select id="mission-select-dropdown" onchange="onSavedMissionSelected(this.value)"
-                style="height: 38px !important; margin-bottom: 0 !important; font-size: 13px; font-weight: 600; border-radius: 12px !important; border: 1.5px solid var(--border); background: var(--panel2); color: var(--text);">
-                <option value="">-- Choose a Saved Mission --</option>
+                style="flex: 1; height: 32px !important; margin-bottom: 0 !important; font-size: 13px; font-weight: 600; border-radius: 8px !important; border: 1.5px solid var(--border); background: var(--panel2); color: var(--text);">
+                <option value="">-- Choose a Mission --</option>
               </select>
               <button class="btn-sm" onclick="loadSavedMissionsList()"
-                style="font-size: 11px; padding: 6.5px; background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.3); color: var(--accent); cursor: pointer; border-radius: 8px;">🔄
-                Refresh List</button>
+                style="font-size: 11px; padding: 0 10px; background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.3); color: var(--accent); cursor: pointer; border-radius: 8px;">🔄</button>
+            </div>
+            
+            <div id="mission-edit-tools" style="display: none; gap: 8px; margin-top: 10px;">
+              <button class="btn-sm btn-success" onclick="overwriteLoadedMission()" style="flex:1; font-size:11px; padding:6px; background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.4); color:var(--green);">💾 Update</button>
+              <button class="btn-sm btn-danger" onclick="deleteLoadedMission()" style="flex:1; font-size:11px; padding:6px; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); color:var(--red);">🗑 Delete</button>
             </div>
           </div>
 
@@ -2470,7 +2475,7 @@
             <div style="display: flex; gap: 8px; margin-top: 8px;">
               <button class="btn-sm btn-success" onclick="saveNamedMissionPrompt()"
                 style="flex: 1; font-size:11px; padding: 6px 10px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green);">💾
-                Save Mission</button>
+                Save As New</button>
               <button class="btn-sm btn-danger" onclick="clearWaypoints()"
                 style="flex: 1; font-size:11px; padding: 6px 10px;">🗑 Clear</button>
             </div>
@@ -2860,7 +2865,18 @@
 
   <!-- ── MANUAL DRIVE POPUP ────────────────────────────────────────────── -->
   <div id="manual-drive-modal"
-    style="display:none; position:fixed; top:70px; right:30px; z-index:99999; background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:0; width:340px; box-shadow:0 15px 50px rgba(0,0,0,0.5); text-align:center; resize:both; overflow:auto; min-width:280px; min-height:220px;">
+    style="display:none; position:fixed; top:70px; right:30px; z-index:99999; background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:0; width:340px; box-shadow:0 15px 50px rgba(0,0,0,0.5); text-align:center; min-width:280px; min-height:220px;">
+    
+    <!-- 8-Directional Resize Handles -->
+    <div class="modal-resizer n" style="position:absolute; top:-5px; left:10px; right:10px; height:10px; cursor:n-resize; z-index:100000;"></div>
+    <div class="modal-resizer s" style="position:absolute; bottom:-5px; left:10px; right:10px; height:10px; cursor:s-resize; z-index:100000;"></div>
+    <div class="modal-resizer e" style="position:absolute; top:10px; bottom:10px; right:-5px; width:10px; cursor:e-resize; z-index:100000;"></div>
+    <div class="modal-resizer w" style="position:absolute; top:10px; bottom:10px; left:-5px; width:10px; cursor:w-resize; z-index:100000;"></div>
+    <div class="modal-resizer nw" style="position:absolute; top:-5px; left:-5px; width:15px; height:15px; cursor:nw-resize; z-index:100000;"></div>
+    <div class="modal-resizer ne" style="position:absolute; top:-5px; right:-5px; width:15px; height:15px; cursor:ne-resize; z-index:100000;"></div>
+    <div class="modal-resizer sw" style="position:absolute; bottom:-5px; left:-5px; width:15px; height:15px; cursor:sw-resize; z-index:100000;"></div>
+    <div class="modal-resizer se" style="position:absolute; bottom:-5px; right:-5px; width:15px; height:15px; cursor:se-resize; z-index:100000;"></div>
+
     <!-- Drag Handle -->
     <div id="manual-drive-header"
       style="cursor:move; padding:16px; background:rgba(255,255,255,0.03); border-bottom:1px solid var(--border); border-radius:16px 16px 0 0;">
@@ -2969,24 +2985,73 @@
     (function () {
       var modal = document.getElementById("manual-drive-modal");
       var header = document.getElementById("manual-drive-header");
+      
       var isDragging = false, startX, startY, initialX, initialY;
+      var isResizing = false, currentResizer = null, startW, startH;
+      
       if (!modal || !header) return;
+      
       header.addEventListener("mousedown", function (e) {
+        if (e.target.classList.contains("modal-resizer")) return;
         isDragging = true;
         startX = e.clientX; startY = e.clientY;
         var rect = modal.getBoundingClientRect();
         initialX = rect.left; initialY = rect.top;
+        e.preventDefault();
       });
+      
+      var resizers = modal.querySelectorAll(".modal-resizer");
+      resizers.forEach(function(resizer) {
+        resizer.addEventListener("mousedown", function(e) {
+           isResizing = true;
+           currentResizer = resizer;
+           startX = e.clientX;
+           startY = e.clientY;
+           var rect = modal.getBoundingClientRect();
+           initialX = rect.left;
+           initialY = rect.top;
+           startW = rect.width;
+           startH = rect.height;
+           e.preventDefault();
+        });
+      });
+
       document.addEventListener("mousemove", function (e) {
-        if (!isDragging) return;
-        var dx = e.clientX - startX;
-        var dy = e.clientY - startY;
-        modal.style.left = (initialX + dx) + "px";
-        modal.style.top = (initialY + dy) + "px";
-        modal.style.right = "auto";
-        modal.style.bottom = "auto";
+        if (isDragging) {
+          var dx = e.clientX - startX;
+          var dy = e.clientY - startY;
+          modal.style.left = (initialX + dx) + "px";
+          modal.style.top = (initialY + dy) + "px";
+          modal.style.right = "auto";
+          modal.style.bottom = "auto";
+        } else if (isResizing && currentResizer) {
+          var dx = e.clientX - startX;
+          var dy = e.clientY - startY;
+          
+          if (currentResizer.classList.contains("e") || currentResizer.classList.contains("ne") || currentResizer.classList.contains("se")) {
+             modal.style.width = Math.max(280, startW + dx) + "px";
+          }
+          if (currentResizer.classList.contains("s") || currentResizer.classList.contains("sw") || currentResizer.classList.contains("se")) {
+             modal.style.height = Math.max(220, startH + dy) + "px";
+          }
+          if (currentResizer.classList.contains("w") || currentResizer.classList.contains("nw") || currentResizer.classList.contains("sw")) {
+             var newW = Math.max(280, startW - dx);
+             modal.style.width = newW + "px";
+             modal.style.left = (initialX + startW - newW) + "px";
+          }
+          if (currentResizer.classList.contains("n") || currentResizer.classList.contains("ne") || currentResizer.classList.contains("nw")) {
+             var newH = Math.max(220, startH - dy);
+             modal.style.height = newH + "px";
+             modal.style.top = (initialY + startH - newH) + "px";
+          }
+        }
       });
-      document.addEventListener("mouseup", function () { isDragging = false; });
+      
+      document.addEventListener("mouseup", function () { 
+        isDragging = false; 
+        isResizing = false; 
+        currentResizer = null; 
+      });
     })();
 
     function doLogin() {
