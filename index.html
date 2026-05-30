@@ -2891,14 +2891,21 @@
     <div style="padding:24px 32px 32px 32px;">
       <!-- D-Pad -->
       <div class="dpad" style="margin: 0 auto;">
+        <div></div>
         <button class="dpad-btn up" onmousedown="forward()" onmouseup="releaseButton()" onmouseleave="releaseButton()"
           ontouchstart="forward()" ontouchend="releaseButton()">▲</button>
+        <div></div>
+        
         <button class="dpad-btn left" onmousedown="left()" onmouseup="releaseButton()" onmouseleave="releaseButton()"
           ontouchstart="left()" ontouchend="releaseButton()">◀</button>
+        <button class="dpad-btn stop-btn" onclick="stopHard()">■</button>
         <button class="dpad-btn right" onmousedown="right()" onmouseup="releaseButton()" onmouseleave="releaseButton()"
           ontouchstart="right()" ontouchend="releaseButton()">▶</button>
+          
+        <div></div>
         <button class="dpad-btn down" onmousedown="back()" onmouseup="releaseButton()" onmouseleave="releaseButton()"
           ontouchstart="back()" ontouchend="releaseButton()">▼</button>
+        <div></div>
       </div>
     </div>
   </div>
