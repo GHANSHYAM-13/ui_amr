@@ -82,7 +82,7 @@ def get_home_position() -> tuple[float, float, float]:
     return hx, hy, hyaw
 
 
-def write_progress(cycle: int, waypoint: int, waypoint_name: str) -> None:
+def write_progress(cycle: int, waypoint: int, waypoint_name: str, total_distance: float = 0.0, total_waypoints: int = 0, total_cycles: int = -1) -> None:
     """Write current mission progress to disk so server.py can serve it."""
     try:
         with open(PROGRESS_FILE, "w") as f:
@@ -90,6 +90,9 @@ def write_progress(cycle: int, waypoint: int, waypoint_name: str) -> None:
                 "cycle": cycle,
                 "waypoint": waypoint,
                 "waypoint_name": waypoint_name,
+                "total_waypoints": total_waypoints,
+                "total_cycles": total_cycles,
+                "total_distance": total_distance,
             }, f)
     except Exception:
         pass  # best-effort; never crash the mission loop
@@ -130,16 +133,16 @@ def navigate_and_wait(
             nav.cancelTask()
             break
 
-        # ── File-based pause / resume ──────────────────────────────────────
+        # ── Pause request handling ─────────────────────────────────────────
+        # Do NOT pause immediately.
+        # Let the current Nav2 goal complete, then pause before next waypoint.
         if os.path.exists(PAUSE_FLAG_FILE):
-            print(f"\n[mission_runner] ⏸  Pause flag detected. Holding robot at '{name}'...", flush=True)
-            while os.path.exists(PAUSE_FLAG_FILE):
-                if stop_flag[0]:
-                    break
-                time.sleep(0.3)
-            if stop_flag[0]:
-                break
-            print(f"\n[mission_runner] ▶  Resumed. Continuing navigation to '{name}'...", flush=True)
+            print(
+                f"\n[mission_runner] ⏸ Pause requested. "
+                f"Current goal '{name}' will complete before pausing.",
+                end="\r",
+                flush=True
+            )
 
         # ── Live pose feedback ─────────────────────────────────────────────
         feedback = nav.getFeedback()
@@ -217,8 +220,15 @@ def main():
         sys.exit(1)
 
     print(f"[mission_runner] Loaded {len(waypoints)} waypoints:", flush=True)
+    total_distance = 0.0
     for i, wp in enumerate(waypoints):
+        x, y = float(wp.get('x', 0)), float(wp.get('y', 0))
+        if i > 0:
+            prev_x, prev_y = float(waypoints[i-1].get('x', 0)), float(waypoints[i-1].get('y', 0))
+            dist = math.sqrt((x - prev_x)**2 + (y - prev_y)**2)
+            total_distance += dist
         print(f"  {i+1}. {wp['name']}  x={wp['x']}  y={wp['y']}  yaw={wp['yaw']}", flush=True)
+    print(f"[mission_runner] Total cycle distance: {total_distance:.2f}m", flush=True)
 
     # ── Parse --cycles argument ───────────────────────────────────────────────
     cycles_to_run = -1   # -1 = infinite
@@ -305,19 +315,41 @@ def main():
                 delay = float(wp.get("delay", 0))
 
                 # Write live progress so the UI can display it
-                write_progress(loop, i + 1, name)
+                write_progress(loop, i + 1, name, total_distance, len(waypoints), cycles_to_run)
 
                 print(f"[mission_runner] → Navigating to '{name}' ({i+1}/{len(waypoints)})",
                       flush=True)
 
                 result = navigate_and_wait(nav, pose, name, _stop_requested)
+                write_progress(loop, i + 1, name, total_distance, len(waypoints), cycles_to_run)  # update progress file
 
                 if _stop_requested[0]:
                     break
 
                 if result == TaskResult.SUCCEEDED:
                     print(f"\n[mission_runner] ✓ Reached '{name}'", flush=True)
+
                     do_delay(delay, name, _stop_requested)
+
+                    # Pause only after waypoint completion
+                    while os.path.exists(PAUSE_FLAG_FILE):
+
+                        if _stop_requested[0]:
+                            break
+
+                        print(
+                            f"[mission_runner] ⏸ Mission paused at '{name}'. Waiting for resume...",
+                            end="\r",
+                            flush=True
+                        )
+
+                        time.sleep(0.5)
+
+                    if not _stop_requested[0]:
+                        print(
+                            f"\n[mission_runner] ▶ Mission resumed.",
+                            flush=True
+                        )
 
                 elif result == TaskResult.CANCELED:
                     # cancelTask() was called — either by stop request (handled above)
@@ -351,6 +383,12 @@ def main():
     # controller_server, and costmap nodes — the entire Nav2 stack. The robot
     # would then reject every new goal until Nav2 is restarted externally.
     # Simply shutting down rclpy is sufficient to clean up this process.
+    try:
+        # Try to cancel any active goal gracefully
+        nav.cancelTask()
+    except Exception:
+        pass
+
     try:
         rclpy.shutdown()
     except Exception:

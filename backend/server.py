@@ -1183,11 +1183,20 @@ def startMission():
     # Parse waypoints for history log and meta
     waypoints = []
     total_wps = 0
+    total_distance = 0.0
     try:
         with open(MISSION_FILE, "r") as f:
             m_data = json.load(f)
-            waypoints = [w.get("name", "Station") for w in m_data.get("waypoints", [])]
-            total_wps = len(waypoints)
+            waypoints_data = m_data.get("waypoints", [])
+            waypoints = [w.get("name", "Station") for w in waypoints_data]
+            total_wps = len(waypoints_data)
+            # Calculate total cycle distance
+            for i in range(1, len(waypoints_data)):
+                x1 = float(waypoints_data[i-1].get("x", 0))
+                y1 = float(waypoints_data[i-1].get("y", 0))
+                x2 = float(waypoints_data[i].get("x", 0))
+                y2 = float(waypoints_data[i].get("y", 0))
+                total_distance += math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
     except Exception:
         pass
 
@@ -1200,6 +1209,7 @@ def startMission():
         "waypoint_names": waypoints,
         "map": active_map_yaml or "",
         "start_time": _time.time(),
+        "total_distance": total_distance,
     }
 
     # ── Persist meta to disk so it survives server restarts ───────────────────
@@ -1407,6 +1417,7 @@ def missionStatus():
         "waypoint_names": mission_meta.get("waypoint_names", []),
         "map": mission_meta.get("map", ""),
         "elapsed_seconds": elapsed,
+        "total_distance": mission_meta.get("total_distance", 0.0),
     })
 
 

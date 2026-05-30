@@ -2445,10 +2445,10 @@
                 <span style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;flex:1;">Cycle Progress</span>
                 <span id="mission-cycle-pct" style="font-size:11px;font-weight:800;color:#0ea5e9;">0%</span>
               </div>
-              <div style="position:relative;background:rgba(255,255,255,0.07);border-radius:99px;height:30px;overflow:hidden;">
+              <div style="position:relative;background:var(--panel2, rgba(30,41,59,0.8));border:1px solid var(--border, rgba(148,163,184,0.2));border-radius:99px;height:30px;overflow:hidden;">
                 <div id="mission-cycle-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#14b8a6,#0ea5e9);border-radius:99px;transition:width 0.9s cubic-bezier(.4,0,.2,1);position:absolute;top:0;left:0;"></div>
                 <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 14px;gap:8px;">
-                  <span id="mission-cycle-bar-label" style="font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.7);white-space:nowrap;flex:1;">— / —</span>
+                  <span id="mission-cycle-bar-label" style="font-size:12px;font-weight:700;color:var(--text, #fff);text-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;flex:1;">— / —</span>
                   <span id="mission-cycle-thumb" style="width:16px;height:16px;min-width:16px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,0.5);display:none;"></span>
                 </div>
               </div>
@@ -2461,42 +2461,43 @@
                 <span style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;flex:1;">Waypoint</span>
                 <span id="mission-wp-pct" style="font-size:11px;font-weight:800;color:#a78bfa;">0%</span>
               </div>
-              <div style="position:relative;background:rgba(255,255,255,0.07);border-radius:99px;height:30px;overflow:hidden;">
+              <div style="position:relative;background:var(--panel2, rgba(30,41,59,0.8));border:1px solid var(--border, rgba(148,163,184,0.2));border-radius:99px;height:30px;overflow:hidden;">
                 <div id="mission-wp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#6366f1);border-radius:99px;transition:width 0.6s cubic-bezier(.4,0,.2,1);position:absolute;top:0;left:0;"></div>
                 <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 14px;">
-                  <span id="mission-wp-bar-label" style="font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.7);white-space:nowrap;flex:1;">— / —</span>
+                  <span id="mission-wp-bar-label" style="font-size:12px;font-weight:700;color:var(--text, #fff);text-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;flex:1;">— / —</span>
                 </div>
               </div>
               <div id="mission-wp-name" style="font-size:10px;color:var(--muted);margin-top:5px;text-align:center;letter-spacing:0.5px;min-height:14px;"></div>
             </div>
 
-            <!-- BAR 03: Time Progress -->
+            <!-- BAR 03: Distance & Remaining -->
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
                 <div style="width:28px;height:28px;min-width:28px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(239,68,68,0.4);">03</div>
-                <span style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;flex:1;">Time Progress</span>
+                <span style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;flex:1;">Distance</span>
+                <span id="mission-distance-remaining" style="font-size:11px;font-weight:800;color:#fca5a5;">—</span>
               </div>
-              <div style="position:relative;background:rgba(255,255,255,0.07);border-radius:99px;height:30px;overflow:hidden;">
+              <div style="position:relative;background:var(--panel2, rgba(30,41,59,0.8));border:1px solid var(--border, rgba(148,163,184,0.2));border-radius:99px;height:30px;overflow:hidden;">
                 <div id="mission-time-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:99px;transition:width 0.9s ease;position:absolute;top:0;left:0;"></div>
                 <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 14px;">
-                  <span id="mission-time-bar-label" style="font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.7);white-space:nowrap;">—</span>
+                  <span id="mission-time-bar-label" style="font-size:12px;font-weight:700;color:var(--text, #fff);text-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">—</span>
                 </div>
               </div>
             </div>
 
-            <!-- Stats row: Elapsed / Remaining / Cycles Left -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07);">
-              <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:8px;padding:9px 4px;">
-                <div style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Elapsed</div>
-                <div id="mission-elapsed-label" style="font-size:16px;font-weight:800;color:var(--text);font-family:monospace;line-height:1;">00:00</div>
+            <!-- Stats row: Distance / Cycles Left / Waypoint Info -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:10px;border-top:1px solid var(--border, rgba(148,163,184,0.2));">
+              <div style="text-align:center;background:var(--panel2, rgba(30,41,59,0.5));border:1px solid var(--border, rgba(148,163,184,0.1));border-radius:8px;padding:9px 4px;">
+                <div style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Distance Rem.</div>
+                <div id="mission-distance-display" style="font-size:16px;font-weight:800;color:#fca5a5;font-family:monospace;line-height:1;">—</div>
               </div>
-              <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:8px;padding:9px 4px;">
-                <div style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Remaining</div>
-                <div id="mission-est-remaining" style="font-size:16px;font-weight:800;color:var(--yellow);font-family:monospace;line-height:1;">—</div>
-              </div>
-              <div style="text-align:center;background:rgba(255,255,255,0.04);border-radius:8px;padding:9px 4px;">
+              <div style="text-align:center;background:var(--panel2, rgba(30,41,59,0.5));border:1px solid var(--border, rgba(148,163,184,0.1));border-radius:8px;padding:9px 4px;">
                 <div style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Cycles Left</div>
                 <div id="mission-cycles-left" style="font-size:16px;font-weight:800;color:var(--green);font-family:monospace;line-height:1;">—</div>
+              </div>
+              <div style="text-align:center;background:var(--panel2, rgba(30,41,59,0.5));border:1px solid var(--border, rgba(148,163,184,0.1));border-radius:8px;padding:9px 4px;">
+                <div style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Current WP</div>
+                <div id="mission-current-wp" style="font-size:14px;font-weight:800;color:var(--accent);font-family:monospace;line-height:1;">0 / 0</div>
               </div>
             </div>
           </div>

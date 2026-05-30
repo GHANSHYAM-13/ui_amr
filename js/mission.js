@@ -445,6 +445,16 @@ function startMission() {
 
   saveMissionFile()
     .then(function () {
+      // Calculate total cycle distance for progress display
+      var totalDist = 0.0;
+      for (var i = 1; i < waypoints.length; i++) {
+        var dx = waypoints[i].x - waypoints[i - 1].x;
+        var dy = waypoints[i].y - waypoints[i - 1].y;
+        totalDist += Math.sqrt(dx * dx + dy * dy);
+      }
+      window._missionCycleDistance = totalDist;
+      console.log("[mission] Calculated cycle distance: " + totalDist.toFixed(2) + "m");
+      
       return fetch(SERVER_URL + "/mission/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -542,6 +552,7 @@ function _updateProgressUI(d) {
   var totalWps     = d.total_wps || 0;
   var currentWp    = d.waypoint || 0;
   var elapsed      = d.elapsed_seconds || 0;
+  var totalDistance = d.total_distance || window._missionCycleDistance || 0;
 
   // ── Sync elapsed ticker to server truth ─────────────────────────────────
   _missionServerElapsed = elapsed;
@@ -588,33 +599,43 @@ function _updateProgressUI(d) {
   if (wpBarLabel) wpBarLabel.textContent = currentWp + ' / ' + totalWps + (totalWps > 0 ? ' wp' : '');
   if (wpName)     wpName.textContent  = d.waypoint_name || '';
 
-  // ── Time / Estimated remaining ────────────────────────────────────────────
-  var estEl = document.getElementById('mission-est-remaining');
-  var timeBar      = document.getElementById('mission-time-bar');
-  var timeBarLabel = document.getElementById('mission-time-bar-label');
+  // ── Distance-to-Travel Progress ──────────────────────────────────────────
+  var distEl = document.getElementById('mission-distance-remaining');
+  var distBar      = document.getElementById('mission-time-bar');
+  var distBarLabel = document.getElementById('mission-time-bar-label');
 
-  var timePctVal = 0;
-  var remSec     = 0;
-
-  if (totalCycles > 0 && currentCycle > 0 && elapsed > 0) {
-    // sec-per-completed-cycle × remaining-cycles = estimated remaining
-    var secPerCycle = elapsed / currentCycle;
-    remSec = Math.round((totalCycles - currentCycle) * secPerCycle);
-    var totalEstSec = elapsed + remSec;
-    timePctVal = totalEstSec > 0 ? Math.min(100, Math.round((elapsed / totalEstSec) * 100)) : 0;
+  var distPctVal = 0;
+  var remDist    = 0;
+  var cycleTotal = totalDistance > 0 ? totalDistance : 0;
+  
+  if (cycleTotal > 0) {
+    var distTraveled = (currentCycle - 1) * cycleTotal;
+    if (currentWp > 0 && totalWps > 0) {
+      distTraveled += (currentWp / totalWps) * cycleTotal;
+    }
+    remDist = Math.max(0, (totalCycles > 0 ? totalCycles : 1) * cycleTotal - distTraveled);
+    distPctVal = cycleTotal > 0 ? Math.min(100, Math.round((distTraveled / ((totalCycles > 0 ? totalCycles : 1) * cycleTotal)) * 100)) : 0;
   }
 
-  if (timeBar)      timeBar.style.width = timePctVal + '%';
-  if (timeBarLabel) {
-    if (remSec > 0) {
-      timeBarLabel.textContent = _fmtTime(elapsed) + '  /  est. ' + _fmtTime(elapsed + remSec);
+  if (distBar)      distBar.style.width = distPctVal + '%';
+  if (distBarLabel) {
+    if (cycleTotal > 0) {
+      var distTrav = totalCycles > 0 ? ((currentCycle - 1 + (currentWp / totalWps)) * cycleTotal) : 0;
+      distBarLabel.textContent = distTrav.toFixed(1) + 'm  /  ' + (remDist > 0 ? remDist.toFixed(1) : '0') + 'm rem.';
     } else if (totalCycles === -1) {
-      timeBarLabel.textContent = 'Elapsed ' + _fmtTime(elapsed);
+      distBarLabel.textContent = 'Cycle ' + currentCycle + '  (∞)';
     } else {
-      timeBarLabel.textContent = '—';
+      distBarLabel.textContent = '—';
     }
   }
-  if (estEl) estEl.textContent = remSec > 0 ? _fmtTime(remSec) : '—';
+  if (distEl) distEl.textContent = remDist > 0 ? remDist.toFixed(1) + 'm' : '—';
+  
+  // Update main display box
+  var distDisplay = document.getElementById('mission-distance-display');
+  if (distDisplay) distDisplay.textContent = remDist > 0 ? remDist.toFixed(1) + 'm' : '—';
+  
+  var wpDisplay = document.getElementById('mission-current-wp');
+  if (wpDisplay) wpDisplay.textContent = currentWp + ' / ' + totalWps;
 
   // ── Bottom badge (bottom bar) ─────────────────────────────────────────────
   var badge = document.getElementById('mission-progress-badge');

@@ -264,9 +264,8 @@ function reloadCostmapFilters() {
   })
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      if (d.status === "reloaded") _zoneToast(d.message || "Costmap filters reloaded", "success");
-      else if (d.status === "error") _zoneToast(d.message || "Mask reload failed", "error");
-      else _zoneToast("Reload: " + (d.message || d.status || "unknown"), "info");
+      if (d.status === "reloaded") _zoneToast("Costmap filters reloaded", "success");
+      else _zoneToast("Reload status: " + (d.message || "unknown"), "info");
     })
     .catch(function() { _zoneToast("Could not reload costmap", "error"); });
 }
@@ -384,11 +383,7 @@ function redrawZones() {
     return;
   }
   zoneDrawLayer = new createjs.Container();
-  if (rootObject.numChildren > 1) {
-    rootObject.addChildAt(zoneDrawLayer, 1);
-  } else {
-    rootObject.addChild(zoneDrawLayer);
-  }
+  rootObject.addChild(zoneDrawLayer);
 
   zones.forEach(function(zone, idx) {
     _drawLiveZone(zone, idx === selectedZoneIdx);
@@ -404,31 +399,17 @@ function _drawLiveZone(zone, selected, preview) {
   var color = ZONE_COLORS[zone.type] || ZONE_COLORS["no-go"];
   var shape = new createjs.Shape();
   shape.alpha = preview ? 0.82 : 1;
-
-  if (zone.type === "lane") {
-    var laneWidth = zone.width || 0.6; // default 0.6m
-    shape.graphics
-      .setStrokeStyle(laneWidth, "round", "round")
-      .beginStroke(selected ? "#f8fafc" : color.stroke);
-    zone.vertices.forEach(function(v, i) {
-      if (i === 0) shape.graphics.moveTo(v.x, v.y);
-      else shape.graphics.lineTo(v.x, v.y);
-    });
-  } else {
-    shape.graphics;
-    if (selected) {
-      shape.graphics
-        .setStrokeStyle(0.08)
-        .beginStroke("#f8fafc");
-    }
-    shape.graphics.beginFill(color.fill);
-    zone.vertices.forEach(function(v, i) {
-      if (i === 0) shape.graphics.moveTo(v.x, v.y);
-      else shape.graphics.lineTo(v.x, v.y);
-    });
-    if (zone.vertices.length >= 3) shape.graphics.closePath();
-  }
+  shape.graphics
+    .setStrokeStyle(selected ? 0.08 : 0.04)
+    .beginStroke(selected ? "#f8fafc" : color.stroke)
+    .beginFill(color.fill);
+  zone.vertices.forEach(function(v, i) {
+    if (i === 0) shape.graphics.moveTo(v.x, -v.y);
+    else shape.graphics.lineTo(v.x, -v.y);
+  });
+  if (zone.vertices.length >= 3) shape.graphics.closePath();
   zoneDrawLayer.addChild(shape);
+
 }
 
 function _ensureDimCanvas() {
@@ -522,19 +503,14 @@ function _attachMapEditorZoneEvents() {
   overlay.addEventListener("mousedown", _onMapEditorZoneDown);
   overlay.addEventListener("mousemove", _onMapEditorZoneMove);
   window.addEventListener("mouseup", _onMapEditorZoneUp);
-
-  overlay.addEventListener("touchstart", _onMapEditorZoneDown, { passive: false });
-  overlay.addEventListener("touchmove", _onMapEditorZoneMove, { passive: false });
-  window.addEventListener("touchend", _onMapEditorZoneUp, { passive: false });
 }
 
 function _mapEditorPoint(e) {
   var canvas = document.getElementById("map-edit-canvas");
   if (!canvas || !zoneMapMeta) return null;
-  var pt = _zonePointer(e);
   var rect = canvas.getBoundingClientRect();
-  var px = (pt.clientX - rect.left) / (rect.width / zoneMapMeta.width);
-  var py = (pt.clientY - rect.top) / (rect.height / zoneMapMeta.height);
+  var px = (e.clientX - rect.left) / (rect.width / zoneMapMeta.width);
+  var py = (e.clientY - rect.top) / (rect.height / zoneMapMeta.height);
   return {
     x: zoneMapMeta.origin[0] + px * zoneMapMeta.resolution,
     y: zoneMapMeta.origin[1] + (zoneMapMeta.height - 1 - py) * zoneMapMeta.resolution
@@ -566,8 +542,7 @@ function _onMapEditorZoneDown(e) {
     /* Start LERP from click pixel position */
     var container = document.getElementById("edit-canvas-container");
     var cRect = container ? container.getBoundingClientRect() : { left: 0, top: 0 };
-    var pt = _zonePointer(e);
-    var startPx = { x: pt.clientX - cRect.left, y: pt.clientY - cRect.top };
+    var startPx = { x: e.clientX - cRect.left, y: e.clientY - cRect.top };
     _startLerp(startPx);
     _showDim(true);
   }
@@ -587,9 +562,8 @@ function _onMapEditorZoneMove(e) {
     /* Update lerp target — rAF loop does the actual polygon update */
     var container = document.getElementById("edit-canvas-container");
     var cRect = container ? container.getBoundingClientRect() : { left: 0, top: 0 };
-    var pt = _zonePointer(e);
-    _lerpTarget.x = pt.clientX - cRect.left;
-    _lerpTarget.y = pt.clientY - cRect.top;
+    _lerpTarget.x = e.clientX - cRect.left;
+    _lerpTarget.y = e.clientY - cRect.top;
   }
 }
 
@@ -745,19 +719,6 @@ function pointInPolygon(x, y, vertices) {
   }
   return inside;
 }
-
-window.isPointInNoGoZone = function(x, y) {
-  if (typeof zones === "undefined" || !zones) return false;
-  for (var i = 0; i < zones.length; i++) {
-    var zone = zones[i];
-    if (zone.type === "no-go" && zone.vertices && zone.vertices.length >= 3) {
-      if (pointInPolygon(x, y, zone.vertices)) {
-        return true;
-      }
-    }
-  }
-  return false;
-};
 
 function getPolygonCentroid(vertices) {
   var cx = 0;
