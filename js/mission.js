@@ -317,7 +317,7 @@ window.loadSettingsMapList = function () {
           "</div>" +
           "<div style='display:flex;gap:6px;'>" +
           "<button onclick='loadMapForLocalization(\"" + mapFile + "\")' style='padding:5px 8px;font-size:10px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;'>⚡ Load</button>" +
-          "<button onclick='deleteMapClick(\"" + mapFile + "\")' style='padding:5px 8px;font-size:10px;background:var(--red);color:#fff;border:none;border-radius:4px;cursor:pointer;'>🗑</button>" +
+          "<button onclick='deleteMapClick(\"" + mapFile + "\")' style='padding:5px 8px;font-size:10px;background:var(--red);color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:600;'>🗑 Delete</button>" +
           "</div>" +
           "</div>";
       }).join("");

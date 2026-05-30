@@ -133,21 +133,21 @@ document.addEventListener("visibilitychange", function () {
 var _eStopActive = false;
 var _eStopInterval = null;
 
-window.eStop = function() {
+window.eStop = function () {
   var btn = document.getElementById("e-stop-btn");
-  
+
   if (!_eStopActive) {
     _eStopActive = true;
     if (typeof showToast === "function") showToast("🛑 EMERGENCY STOP ACTIVATED", "error");
-    
+
     if (btn) {
       btn.innerHTML = "RELEASE E-STOP";
       btn.style.background = "#b91c1c"; // Darker red to indicate active hold
       btn.style.color = "#ffffff";
     }
-    
+
     // 1. Force continuous zero velocity to override anything else instantly
-    _eStopInterval = setInterval(function() {
+    _eStopInterval = setInterval(function () {
       if (typeof cmdVel !== 'undefined' && cmdVel) {
         cmdVel.publish(new ROSLIB.Message({
           linear: { x: 0.0, y: 0.0, z: 0.0 },
@@ -155,17 +155,17 @@ window.eStop = function() {
         }));
       }
     }, 50); // Publish at 20Hz
-    
+
     // 2. Stop running mission via backend and explicitly cancel any direct Nav2 goal
     fetch(SERVER_URL + "/mission/stop", { method: "POST" })
-      .then(function() { 
-        if (typeof showToast === "function") showToast("Mission Cancelled", "info"); 
+      .then(function () {
+        if (typeof showToast === "function") showToast("Mission Cancelled", "info");
       })
-      .catch(function(e) { console.error("eStop mission stop error:", e); });
-      
+      .catch(function (e) { console.error("eStop mission stop error:", e); });
+
     fetch(SERVER_URL + "/cancel_goal", { method: "POST" })
-      .catch(function(e) { console.error("eStop nav cancel error:", e); });
-      
+      .catch(function (e) { console.error("eStop nav cancel error:", e); });
+
     // 3. Update UI
     var btnStart = document.getElementById("btn-start-mission");
     if (btnStart) btnStart.innerHTML = "▶ START MISSION";
@@ -173,7 +173,7 @@ window.eStop = function() {
     if (btnPause) btnPause.disabled = true;
     var btnStop = document.getElementById("btn-stop-mission");
     if (btnStop) btnStop.disabled = true;
-    
+
   } else {
     // Release E-STOP
     _eStopActive = false;
@@ -181,13 +181,13 @@ window.eStop = function() {
       clearInterval(_eStopInterval);
       _eStopInterval = null;
     }
-    
+
     if (btn) {
       btn.innerHTML = "E-STOP";
       btn.style.background = "rgba(239, 68, 68, 0.15)";
       btn.style.color = "var(--red, #ef4444)";
     }
-    
+
     if (typeof showToast === "function") showToast("✅ E-STOP RELEASED", "success");
   }
 };
