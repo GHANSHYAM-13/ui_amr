@@ -75,27 +75,31 @@ function redrawWaypointMarkers() {
     wpGrp.x = wp.x; wpGrp.y = wp.y;
     wpGrp.cursor = "pointer";
 
+    // Red Map Pin (Google Maps style)
     var pin = new createjs.Shape();
-    pin.graphics.setStrokeStyle(0.04).beginStroke("#ffffff").beginFill("#3b82f6").drawCircle(0, 0, 0.16)
-       .endStroke().beginFill("#ffffff").drawCircle(0, 0, 0.05);
-    
-    var tick = new createjs.Shape();
-    tick.graphics.setStrokeStyle(0.06).beginStroke("#3b82f6").moveTo(0.16, 0).lineTo(0.35, 0);
-    tick.rotation = wp.yaw * (180 / Math.PI);
+    pin.graphics.beginFill("#ea4335")
+       .moveTo(0, 0)
+       .bezierCurveTo(0.12, 0.15, 0.2, 0.25, 0.2, 0.35)
+       .arc(0, 0.35, 0.2, 0, Math.PI, false)
+       .bezierCurveTo(-0.2, 0.25, -0.12, 0.15, 0, 0)
+       .closePath();
+       
+    var inner = new createjs.Shape();
+    inner.graphics.beginFill("#7f1d1d").drawCircle(0, 0.35, 0.08);
 
-    var lbl = new createjs.Text(String(idx + 1), "bold 0.16px Arial", "#ffffff");
+    var lbl = new createjs.Text(String(idx + 1), "bold 0.12px Arial", "#ffffff");
     lbl.textAlign = "center"; lbl.textBaseline = "middle";
-    lbl.y = 0.28;
+    lbl.y = 0.35;
     lbl.scaleY = -1; lbl.scaleX = scaleX_fix;
     
-    var shadow = new createjs.Text(String(idx + 1), "bold 0.16px Arial", "#000000");
+    var shadow = new createjs.Text(String(idx + 1), "bold 0.12px Arial", "#000000");
     shadow.textAlign = "center"; shadow.textBaseline = "middle";
-    shadow.y = 0.29; shadow.x = 0.01;
+    shadow.y = 0.36; shadow.x = 0.01;
     shadow.scaleY = -1; shadow.scaleX = scaleX_fix;
     shadow.alpha = 0.5;
 
-    wpGrp.addChild(tick);
     wpGrp.addChild(pin);
+    wpGrp.addChild(inner);
     wpGrp.addChild(shadow);
     wpGrp.addChild(lbl);
 
@@ -902,7 +906,8 @@ window.saveNamedMissionPrompt = function() {
     showToast("⚠ Cannot save an empty mission configuration", "error");
     return;
   }
-  var name = prompt("Enter a name for this mission configuration:");
+  var defaultName = window._currentMissionName || "";
+  var name = prompt("Enter a name for this mission configuration (overwrite to update):", defaultName);
   if (name === null) return;
   name = name.trim();
   if (!name) {
@@ -924,6 +929,7 @@ window.saveNamedMissionPrompt = function() {
   })
   .then(function(data) {
     if (data.status === "success") {
+      window._currentMissionName = name;
       showToast("💾 Mission successfully saved as: " + data.name, "success");
       if (typeof loadSavedMissionsList === "function") loadSavedMissionsList();
     } else {
@@ -959,7 +965,10 @@ window.loadSavedMissionsList = function() {
 };
 
 window.onSavedMissionSelected = function(val) {
-  if (!val) return;
+  if (!val) {
+    window._currentMissionName = "";
+    return;
+  }
   
   showToast("⏳ Loading mission config: " + val + "...", "info");
   fetch(SERVER_URL + "/mission/load_named", {
@@ -971,6 +980,7 @@ window.onSavedMissionSelected = function(val) {
   .then(function(data) {
     if (data.status === "success") {
       waypoints = data.waypoints || [];
+      window._currentMissionName = val;
       renderWpList();
       redrawWaypointMarkers();
       showToast("✅ Loaded " + val + " configuration", "success");

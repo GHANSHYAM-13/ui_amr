@@ -36,17 +36,28 @@
    VARIABLES & RESET
 ═══════════════════════════════════════════════════════════ */
     :root {
-      --bg: #0b101e;       /* Deep Space Blue */
-      --panel: #141b2d;    /* Navy Gray */
-      --panel2: #1e2638;   /* Lighter Navy */
-      --border: #2a3449;   /* Slate Border */
-      --accent: #00d2ff;   /* Cyan Accent */
-      --accent2: #ff5e00;  /* Industrial Amber/Orange */
-      --green: #00ff88;    /* Neon Green */
-      --red: #ff3333;      /* Alert Red */
-      --yellow: #ffd700;   /* Warning Yellow */
-      --text: #e0e6ed;     /* Crisp White-Blue */
-      --muted: #8a9bb2;    /* Slate Muted */
+      --bg: #0b101e;
+      /* Deep Space Blue */
+      --panel: #141b2d;
+      /* Navy Gray */
+      --panel2: #1e2638;
+      /* Lighter Navy */
+      --border: #2a3449;
+      /* Slate Border */
+      --accent: #00d2ff;
+      /* Cyan Accent */
+      --accent2: #ff5e00;
+      /* Industrial Amber/Orange */
+      --green: #00ff88;
+      /* Neon Green */
+      --red: #ff3333;
+      /* Alert Red */
+      --yellow: #ffd700;
+      /* Warning Yellow */
+      --text: #e0e6ed;
+      /* Crisp White-Blue */
+      --muted: #8a9bb2;
+      /* Slate Muted */
       --font-head: 'Orbitron', monospace;
       --font-body: 'Exo 2', sans-serif;
     }
@@ -61,17 +72,27 @@
 
     /* ── LIGHT THEME ───────────────────────────── */
     body.theme-light {
-      --bg: #eef2f5;       /* Light Gray/Blue */
+      --bg: #eef2f5;
+      /* Light Gray/Blue */
       --panel: #ffffff;
-      --panel2: #e2e8f0;   /* Slate 200 */
-      --border: #cbd5e1;   /* Slate 300 */
-      --accent: #007bb5;   /* Strong Blue */
-      --accent2: #d9480f;  /* Rust Orange */
-      --green: #0b8a4f;    /* Strong Green */
-      --red: #c92a2a;      /* Strong Red */
-      --yellow: #f08c00;   /* Deep Yellow */
-      --text: #1e293b;     /* Slate 800 */
-      --muted: #64748b;    /* Slate 500 */
+      --panel2: #e2e8f0;
+      /* Slate 200 */
+      --border: #cbd5e1;
+      /* Slate 300 */
+      --accent: #007bb5;
+      /* Strong Blue */
+      --accent2: #d9480f;
+      /* Rust Orange */
+      --green: #0b8a4f;
+      /* Strong Green */
+      --red: #c92a2a;
+      /* Strong Red */
+      --yellow: #f08c00;
+      /* Deep Yellow */
+      --text: #1e293b;
+      /* Slate 800 */
+      --muted: #64748b;
+      /* Slate 500 */
     }
 
     body.theme-light::before {
@@ -412,7 +433,7 @@
       border-radius: 4px;
       transition: background 0.2s;
     }
-    
+
     .hamburger-menu:hover {
       background: rgba(255, 255, 255, 0.1);
     }
@@ -440,7 +461,7 @@
       transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
-      box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.5);
     }
 
     body.theme-light .app-side-menu {
@@ -509,7 +530,7 @@
     }
 
     .menu-item:hover {
-      background: rgba(255,255,255,0.03);
+      background: rgba(255, 255, 255, 0.03);
       color: var(--accent);
     }
 
@@ -1882,35 +1903,42 @@
         font-size: 13px;
       }
     }
+
     #view-missions.mode-create .play-only {
       display: none !important;
     }
+
     #view-missions.mode-play .create-only {
       display: none !important;
     }
+
     /* Light Mode Progress Panel Fixes */
     body.theme-light #mission-progress-panel {
       background: #ffffff !important;
       border-color: #cbd5e1 !important;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }
+
     body.theme-light #mission-progress-panel span,
     body.theme-light #mission-progress-panel div {
       text-shadow: none !important;
     }
+
     body.theme-light #mission-progress-panel [style*="color:var(--text)"] {
       color: #1e293b !important;
     }
+
     body.theme-light #mission-progress-panel [style*="rgba(255,255,255,0.04)"] {
       background: #f1f5f9 !important;
     }
+
     body.theme-light #mission-progress-panel [style*="rgba(255,255,255,0.06)"] {
       background: #f1f5f9 !important;
     }
+
     body.theme-light #mission-progress-panel [style*="rgba(255,255,255,0.07)"] {
       background: #e2e8f0 !important;
     }
-
   </style>
 </head>
 
@@ -1971,14 +1999,22 @@
           src="data:image/png;base64,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"
           style="height:38px;width:auto;object-fit:contain;" alt="C4i4 Lab">
       </div>
-      <div id="topbar-title" style="font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: 1.5px; margin-left: 20px; text-transform: uppercase;">HOME</div>
+      <div id="topbar-title"
+        style="font-size: 16px; font-weight: 800; color: var(--text); letter-spacing: 1.5px; margin-left: 20px; text-transform: uppercase;">
+        HOME</div>
       <div class="topbar-sep"></div>
       <!-- Center status section that replaces the old tabs -->
       <div class="topbar-controls" style="display: flex; gap: 10px; align-items: center; margin-left: 20px;">
-         <button class="btn-primary" style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; background:rgba(14,165,233,0.14); border:1px solid rgba(14,165,233,0.45); color:var(--accent); box-shadow:none;" onclick="switchView('localization')" id="top-nav-navigation">NAVIGATION</button>
-         <button class="btn-primary" style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;" onclick="toggleRobot()" id="btn-start-robot">START ROBOT</button>
-         <button class="btn-primary" style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.4); color:#3b82f6;" onclick="document.getElementById('manual-drive-modal').style.display='flex'">🎮 MANUAL DRIVE</button>
-         <button class="btn-danger" style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;" onclick="eStop()">E-STOP</button>
+        <button class="btn-primary"
+          style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; background:rgba(14,165,233,0.14); border:1px solid rgba(14,165,233,0.45); color:var(--accent); box-shadow:none;"
+          onclick="switchView('localization')" id="top-nav-navigation">NAVIGATION</button>
+        <button class="btn-primary" style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;"
+          onclick="toggleRobot()" id="btn-start-robot">START ROBOT</button>
+        <button class="btn-primary"
+          style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.4); color:#3b82f6;"
+          onclick="document.getElementById('manual-drive-modal').style.display='block'">🎮 MANUAL DRIVE</button>
+        <button class="btn-danger" style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;"
+          onclick="eStop()">E-STOP</button>
       </div>
       <div class="topbar-status">
         <!-- Battery % -->
@@ -2091,7 +2127,9 @@
         <div class="menu-item" id="menu-custom" onclick="switchView('custom'); toggleOffCanvasMenu();">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
           </svg>
           Custom App
         </div>
@@ -2296,9 +2334,10 @@
               <button class="btn-pose" id="btn-pose" onclick="enablePoseEstimate()" disabled>🎯 FIX ROBOT
                 POSITION</button>
               <button class="btn-goal" id="btn-goal" onclick="enableGoalPose()" disabled>🟢 GO TO POINT</button>
-              <button class="btn-home" id="btn-home" onclick="goHome()" disabled style="display:flex; align-items:center; justify-content:center; gap:8px;">
+              <button class="btn-home" id="btn-home" onclick="goHome()" disabled
+                style="display:flex; align-items:center; justify-content:center; gap:8px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 3L2 12h3v8h5v-6h4v6h5v-8h3L12 3z"/>
+                  <path d="M12 3L2 12h3v8h5v-6h4v6h5v-8h3L12 3z" />
                 </svg>
                 RETURN TO BASE
               </button>
@@ -2406,6 +2445,19 @@
           <button class="sidebar-toggle" id="toggle-missions" onclick="toggleSidebar('missions')"
             title="Toggle sidebar">◀</button>
 
+          <div class="sec-label">Select Saved Mission</div>
+          <div class="sidebar-block" style="padding: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <select id="mission-select-dropdown" onchange="onSavedMissionSelected(this.value)"
+                style="height: 38px !important; margin-bottom: 0 !important; font-size: 13px; font-weight: 600; border-radius: 12px !important; border: 1.5px solid var(--border); background: var(--panel2); color: var(--text);">
+                <option value="">-- Choose a Saved Mission --</option>
+              </select>
+              <button class="btn-sm" onclick="loadSavedMissionsList()"
+                style="font-size: 11px; padding: 6.5px; background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.3); color: var(--accent); cursor: pointer; border-radius: 8px;">🔄
+                Refresh List</button>
+            </div>
+          </div>
+
           <div class="sec-label create-only">Mission Configuration</div>
           <div class="sidebar-block create-only">
             <input type="text" id="wp-name" placeholder="WAYPOINT NAME" style="margin-bottom: 8px;">
@@ -2417,21 +2469,10 @@
             <div id="wp-list"></div>
             <div style="display: flex; gap: 8px; margin-top: 8px;">
               <button class="btn-sm btn-success" onclick="saveNamedMissionPrompt()"
-                style="flex: 1; font-size:11px; padding: 6px 10px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green);">💾 Save Mission</button>
+                style="flex: 1; font-size:11px; padding: 6px 10px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green);">💾
+                Save Mission</button>
               <button class="btn-sm btn-danger" onclick="clearWaypoints()"
                 style="flex: 1; font-size:11px; padding: 6px 10px;">🗑 Clear</button>
-            </div>
-          </div>
-
-          <div class="sec-label play-only">Select Saved Mission</div>
-          <div class="sidebar-block play-only" style="padding: 14px;">
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-              <select id="mission-select-dropdown" onchange="onSavedMissionSelected(this.value)"
-                style="height: 38px !important; margin-bottom: 0 !important; font-size: 13px; font-weight: 600; border-radius: 12px !important; border: 1.5px solid var(--border); background: var(--panel2); color: var(--text);">
-                <option value="">-- Choose a Saved Mission --</option>
-              </select>
-              <button class="btn-sm" onclick="loadSavedMissionsList()"
-                style="font-size: 11px; padding: 6.5px; background: rgba(14,165,233,0.1); border: 1px solid rgba(14,165,233,0.3); color: var(--accent); cursor: pointer; border-radius: 8px;">🔄 Refresh List</button>
             </div>
           </div>
 
@@ -2439,46 +2480,62 @@
           <div class="sidebar-block play-only" style="padding: 14px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
               <span style="font-size: 12px; font-weight: 600; color: var(--text);">Cycle Count:</span>
-              <span id="mission-cycle-val" style="font-weight: 700; color: var(--accent); font-size: 13px;">1 Loop Cycle</span>
+              <span id="mission-cycle-val" style="font-weight: 700; color: var(--accent); font-size: 13px;">1 Loop
+                Cycle</span>
             </div>
-            
+
             <div style="display: flex; gap: 8px; align-items: center;">
-              <input type="number" id="mission-cycle-input" min="1" step="1" value="1" 
+              <input type="number" id="mission-cycle-input" min="1" step="1" value="1"
                 style="flex: 1; height: 38px !important; margin-bottom: 0 !important; font-size: 14px; text-align: center; border-radius: 12px !important; border: 1.5px solid var(--border);"
                 oninput="onCycleInputChanged(this.value)">
-                
+
               <label class="toggle-switch" title="Infinite Loop">
                 <input type="checkbox" id="mission-cycle-infinite" onchange="toggleInfiniteCycles(this.checked)">
                 <span class="toggle-slider"></span>
               </label>
-              <span style="font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap;">🔁 Infinite</span>
+              <span style="font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap;">🔁
+                Infinite</span>
             </div>
           </div>
 
           <!-- ── MISSION ACTIVE PROGRESS PANEL ──────────────────────────────────── -->
-          <div class="sidebar-block play-only" id="mission-progress-panel" style="display:none; flex-direction:column; gap:14px; padding:16px; background:rgba(10,14,30,0.8); border:1px solid rgba(99,102,241,0.28); border-radius:14px;">
+          <div class="sidebar-block play-only" id="mission-progress-panel"
+            style="display:none; flex-direction:column; gap:14px; padding:16px; background:rgba(10,14,30,0.8); border:1px solid rgba(99,102,241,0.28); border-radius:14px;">
 
             <!-- Header: status dot + label + elapsed badge -->
             <div style="display:flex;align-items:center;justify-content:space-between;">
               <div style="display:flex;align-items:center;gap:8px;">
-                <span id="mission-pulse-dot" style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.2s infinite;flex-shrink:0;"></span>
-                <span id="mission-run-state-label" style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--green);">RUNNING</span>
+                <span id="mission-pulse-dot"
+                  style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.2s infinite;flex-shrink:0;"></span>
+                <span id="mission-run-state-label"
+                  style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--green);">RUNNING</span>
               </div>
-              <span id="mission-elapsed-time" style="font-size:11px;color:var(--muted);font-family:monospace;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:4px;letter-spacing:1px;"></span>
+              <span id="mission-elapsed-time"
+                style="font-size:11px;color:var(--muted);font-family:monospace;background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:4px;letter-spacing:1px;"></span>
             </div>
 
             <!-- BAR 01: Cycle Progress -->
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
-                <div style="width:28px;height:28px;min-width:28px;border-radius:50%;background:linear-gradient(135deg,#14b8a6,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(14,165,233,0.4);">01</div>
-                <span style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;flex:1;">Cycle Progress</span>
+                <div
+                  style="width:28px;height:28px;min-width:28px;border-radius:50%;background:linear-gradient(135deg,#14b8a6,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(14,165,233,0.4);">
+                  01</div>
+                <span
+                  style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;flex:1;">Cycle
+                  Progress</span>
                 <span id="mission-cycle-pct" style="font-size:11px;font-weight:800;color:#0ea5e9;">0%</span>
               </div>
-              <div style="position:relative;background:var(--panel2, rgba(30,41,59,0.8));border:1px solid var(--border, rgba(148,163,184,0.2));border-radius:99px;height:30px;overflow:hidden;">
-                <div id="mission-cycle-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#14b8a6,#0ea5e9);border-radius:99px;transition:width 0.9s cubic-bezier(.4,0,.2,1);position:absolute;top:0;left:0;"></div>
+              <div
+                style="position:relative;background:var(--panel2, rgba(30,41,59,0.8));border:1px solid var(--border, rgba(148,163,184,0.2));border-radius:99px;height:30px;overflow:hidden;">
+                <div id="mission-cycle-bar"
+                  style="height:100%;width:0%;background:linear-gradient(90deg,#14b8a6,#0ea5e9);border-radius:99px;transition:width 0.9s cubic-bezier(.4,0,.2,1);position:absolute;top:0;left:0;">
+                </div>
                 <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 14px;gap:8px;">
-                  <span id="mission-cycle-bar-label" style="font-size:12px;font-weight:700;color:var(--text, #fff);text-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;flex:1;">— / —</span>
-                  <span id="mission-cycle-thumb" style="width:16px;height:16px;min-width:16px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,0.5);display:none;"></span>
+                  <span id="mission-cycle-bar-label"
+                    style="font-size:12px;font-weight:700;color:var(--text, #fff);text-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;flex:1;">—
+                    / —</span>
+                  <span id="mission-cycle-thumb"
+                    style="width:16px;height:16px;min-width:16px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,0.5);display:none;"></span>
                 </div>
               </div>
             </div>
@@ -2486,47 +2543,78 @@
             <!-- BAR 02: Waypoint Progress -->
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
-                <div style="width:28px;height:28px;min-width:28px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#6366f1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(99,102,241,0.4);">02</div>
-                <span style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;flex:1;">Waypoint</span>
+                <div
+                  style="width:28px;height:28px;min-width:28px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#6366f1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(99,102,241,0.4);">
+                  02</div>
+                <span
+                  style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;flex:1;">Waypoint</span>
                 <span id="mission-wp-pct" style="font-size:11px;font-weight:800;color:#a78bfa;">0%</span>
               </div>
-              <div style="position:relative;background:var(--panel2, rgba(30,41,59,0.8));border:1px solid var(--border, rgba(148,163,184,0.2));border-radius:99px;height:30px;overflow:hidden;">
-                <div id="mission-wp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#6366f1);border-radius:99px;transition:width 0.6s cubic-bezier(.4,0,.2,1);position:absolute;top:0;left:0;"></div>
+              <div
+                style="position:relative;background:var(--panel2, rgba(30,41,59,0.8));border:1px solid var(--border, rgba(148,163,184,0.2));border-radius:99px;height:30px;overflow:hidden;">
+                <div id="mission-wp-bar"
+                  style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#6366f1);border-radius:99px;transition:width 0.6s cubic-bezier(.4,0,.2,1);position:absolute;top:0;left:0;">
+                </div>
                 <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 14px;">
-                  <span id="mission-wp-bar-label" style="font-size:12px;font-weight:700;color:var(--text, #fff);text-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;flex:1;">— / —</span>
+                  <span id="mission-wp-bar-label"
+                    style="font-size:12px;font-weight:700;color:var(--text, #fff);text-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;flex:1;">—
+                    / —</span>
                 </div>
               </div>
-              <div id="mission-wp-name" style="font-size:10px;color:var(--muted);margin-top:5px;text-align:center;letter-spacing:0.5px;min-height:14px;"></div>
+              <div id="mission-wp-name"
+                style="font-size:10px;color:var(--muted);margin-top:5px;text-align:center;letter-spacing:0.5px;min-height:14px;">
+              </div>
             </div>
 
             <!-- BAR 03: Distance & Remaining -->
             <div>
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;">
-                <div style="width:28px;height:28px;min-width:28px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(239,68,68,0.4);">03</div>
-                <span style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;flex:1;">Distance</span>
+                <div
+                  style="width:28px;height:28px;min-width:28px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#ef4444);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;box-shadow:0 2px 8px rgba(239,68,68,0.4);">
+                  03</div>
+                <span
+                  style="font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase;flex:1;">Distance</span>
                 <span id="mission-distance-remaining" style="font-size:11px;font-weight:800;color:#fca5a5;">—</span>
               </div>
-              <div style="position:relative;background:var(--panel2, rgba(30,41,59,0.8));border:1px solid var(--border, rgba(148,163,184,0.2));border-radius:99px;height:30px;overflow:hidden;">
-                <div id="mission-time-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:99px;transition:width 0.9s ease;position:absolute;top:0;left:0;"></div>
+              <div
+                style="position:relative;background:var(--panel2, rgba(30,41,59,0.8));border:1px solid var(--border, rgba(148,163,184,0.2));border-radius:99px;height:30px;overflow:hidden;">
+                <div id="mission-time-bar"
+                  style="height:100%;width:0%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:99px;transition:width 0.9s ease;position:absolute;top:0;left:0;">
+                </div>
                 <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 14px;">
-                  <span id="mission-time-bar-label" style="font-size:12px;font-weight:700;color:var(--text, #fff);text-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">—</span>
+                  <span id="mission-time-bar-label"
+                    style="font-size:12px;font-weight:700;color:var(--text, #fff);text-shadow:0 1px 4px rgba(0,0,0,0.3);white-space:nowrap;">—</span>
                 </div>
               </div>
             </div>
 
             <!-- Stats row: Distance / Cycles Left / Waypoint Info -->
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:10px;border-top:1px solid var(--border, rgba(148,163,184,0.2));">
-              <div style="text-align:center;background:var(--panel2, rgba(30,41,59,0.5));border:1px solid var(--border, rgba(148,163,184,0.1));border-radius:8px;padding:9px 4px;">
-                <div style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Distance Rem.</div>
-                <div id="mission-distance-display" style="font-size:16px;font-weight:800;color:#fca5a5;font-family:monospace;line-height:1;">—</div>
+            <div
+              style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:10px;border-top:1px solid var(--border, rgba(148,163,184,0.2));">
+              <div
+                style="text-align:center;background:var(--panel2, rgba(30,41,59,0.5));border:1px solid var(--border, rgba(148,163,184,0.1));border-radius:8px;padding:9px 4px;">
+                <div
+                  style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">
+                  Distance Rem.</div>
+                <div id="mission-distance-display"
+                  style="font-size:16px;font-weight:800;color:#fca5a5;font-family:monospace;line-height:1;">—</div>
               </div>
-              <div style="text-align:center;background:var(--panel2, rgba(30,41,59,0.5));border:1px solid var(--border, rgba(148,163,184,0.1));border-radius:8px;padding:9px 4px;">
-                <div style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Cycles Left</div>
-                <div id="mission-cycles-left" style="font-size:16px;font-weight:800;color:var(--green);font-family:monospace;line-height:1;">—</div>
+              <div
+                style="text-align:center;background:var(--panel2, rgba(30,41,59,0.5));border:1px solid var(--border, rgba(148,163,184,0.1));border-radius:8px;padding:9px 4px;">
+                <div
+                  style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">
+                  Cycles Left</div>
+                <div id="mission-cycles-left"
+                  style="font-size:16px;font-weight:800;color:var(--green);font-family:monospace;line-height:1;">—</div>
               </div>
-              <div style="text-align:center;background:var(--panel2, rgba(30,41,59,0.5));border:1px solid var(--border, rgba(148,163,184,0.1));border-radius:8px;padding:9px 4px;">
-                <div style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">Current WP</div>
-                <div id="mission-current-wp" style="font-size:14px;font-weight:800;color:var(--accent);font-family:monospace;line-height:1;">0 / 0</div>
+              <div
+                style="text-align:center;background:var(--panel2, rgba(30,41,59,0.5));border:1px solid var(--border, rgba(148,163,184,0.1));border-radius:8px;padding:9px 4px;">
+                <div
+                  style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;">
+                  Current WP</div>
+                <div id="mission-current-wp"
+                  style="font-size:14px;font-weight:800;color:var(--accent);font-family:monospace;line-height:1;">0 / 0
+                </div>
               </div>
             </div>
           </div>
@@ -2771,27 +2859,42 @@
   <input type="hidden" id="speed-angular" value="0.8">
 
   <!-- ── MANUAL DRIVE POPUP ────────────────────────────────────────────── -->
-  <div id="manual-drive-modal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; backdrop-filter:blur(3px);">
-    <div style="background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:32px; width:340px; box-shadow:0 15px 50px rgba(0,0,0,0.5); text-align:center;">
-      <div style="font-family:var(--font-head); font-size:16px; font-weight:700; margin-bottom:24px; color:var(--accent); letter-spacing:2px;">MANUAL OVERRIDE</div>
-      
+  <div id="manual-drive-modal"
+    style="display:none; position:fixed; top:70px; right:30px; z-index:99999; background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:0; width:340px; box-shadow:0 15px 50px rgba(0,0,0,0.5); text-align:center; resize:both; overflow:auto; min-width:280px; min-height:220px;">
+    <!-- Drag Handle -->
+    <div id="manual-drive-header"
+      style="cursor:move; padding:16px; background:rgba(255,255,255,0.03); border-bottom:1px solid var(--border); border-radius:16px 16px 0 0;">
+      <div
+        style="font-family:var(--font-head); font-size:15px; font-weight:700; color:var(--accent); letter-spacing:2px; display:flex; justify-content:space-between; align-items:center;">
+        <span>MANUAL OVERRIDE</span>
+        <span onclick="document.getElementById('manual-drive-modal').style.display='none'"
+          style="cursor:pointer; color:var(--muted); font-size:18px;">&times;</span>
+      </div>
+    </div>
+
+    <div style="padding:24px 32px 32px 32px;">
       <!-- D-Pad -->
       <div class="dpad" style="margin: 0 auto;">
-        <button class="dpad-btn up" onmousedown="forward()" onmouseup="releaseButton()" onmouseleave="releaseButton()" ontouchstart="forward()" ontouchend="releaseButton()">▲</button>
-        <button class="dpad-btn left" onmousedown="left()" onmouseup="releaseButton()" onmouseleave="releaseButton()" ontouchstart="left()" ontouchend="releaseButton()">◀</button>
-        <button class="dpad-btn right" onmousedown="right()" onmouseup="releaseButton()" onmouseleave="releaseButton()" ontouchstart="right()" ontouchend="releaseButton()">▶</button>
-        <button class="dpad-btn down" onmousedown="back()" onmouseup="releaseButton()" onmouseleave="releaseButton()" ontouchstart="back()" ontouchend="releaseButton()">▼</button>
+        <button class="dpad-btn up" onmousedown="forward()" onmouseup="releaseButton()" onmouseleave="releaseButton()"
+          ontouchstart="forward()" ontouchend="releaseButton()">▲</button>
+        <button class="dpad-btn left" onmousedown="left()" onmouseup="releaseButton()" onmouseleave="releaseButton()"
+          ontouchstart="left()" ontouchend="releaseButton()">◀</button>
+        <button class="dpad-btn right" onmousedown="right()" onmouseup="releaseButton()" onmouseleave="releaseButton()"
+          ontouchstart="right()" ontouchend="releaseButton()">▶</button>
+        <button class="dpad-btn down" onmousedown="back()" onmouseup="releaseButton()" onmouseleave="releaseButton()"
+          ontouchstart="back()" ontouchend="releaseButton()">▼</button>
       </div>
 
-      <div style="margin-top:24px; background:var(--bg); padding:16px; border-radius:10px; border:1px solid var(--border);">
-        <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); font-weight:700; margin-bottom:12px; letter-spacing:1px;">
+      <div
+        style="margin-top:24px; background:var(--bg); padding:16px; border-radius:10px; border:1px solid var(--border);">
+        <div
+          style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); font-weight:700; margin-bottom:12px; letter-spacing:1px;">
           <span>DRIVING SPEED</span>
           <span id="manual-spd-val" style="color:var(--text);">0.15 m/s</span>
         </div>
-        <input type="range" id="manual-spd-range" min="0.05" max="0.3" step="0.01" value="0.15" style="width:100%;" oninput="updateSpeed(this.value, 'manual-spd-val')">
+        <input type="range" id="manual-spd-range" min="0.05" max="0.3" step="0.01" value="0.15" style="width:100%;"
+          oninput="updateSpeed(this.value, 'manual-spd-val')">
       </div>
-
-      <button class="btn-primary" style="margin-top:28px; width:100%; padding:12px; font-size:14px; font-weight:600; letter-spacing:1px;" onclick="document.getElementById('manual-drive-modal').style.display='none'">CLOSE</button>
     </div>
   </div>
 
@@ -2861,6 +2964,30 @@
     });
     /* Auto-focus username on page load */
     setTimeout(function () { document.getElementById('login-user').focus(); }, 200);
+
+    /* Draggable Manual Drive Modal */
+    (function () {
+      var modal = document.getElementById("manual-drive-modal");
+      var header = document.getElementById("manual-drive-header");
+      var isDragging = false, startX, startY, initialX, initialY;
+      if (!modal || !header) return;
+      header.addEventListener("mousedown", function (e) {
+        isDragging = true;
+        startX = e.clientX; startY = e.clientY;
+        var rect = modal.getBoundingClientRect();
+        initialX = rect.left; initialY = rect.top;
+      });
+      document.addEventListener("mousemove", function (e) {
+        if (!isDragging) return;
+        var dx = e.clientX - startX;
+        var dy = e.clientY - startY;
+        modal.style.left = (initialX + dx) + "px";
+        modal.style.top = (initialY + dy) + "px";
+        modal.style.right = "auto";
+        modal.style.bottom = "auto";
+      });
+      document.addEventListener("mouseup", function () { isDragging = false; });
+    })();
 
     function doLogin() {
       var u = document.getElementById('login-user').value.trim();
@@ -2977,21 +3104,21 @@
       document.querySelectorAll('.menu-item').forEach(function (m) { m.classList.remove('active'); });
       var topNav = document.getElementById('top-nav-navigation');
       if (topNav) topNav.classList.remove('active');
-      
+
       var viewEl = document.getElementById('view-missions');
       if (viewEl) {
         viewEl.classList.add('active');
         viewEl.classList.remove('mode-create', 'mode-play');
         viewEl.classList.add('mode-' + mode);
       }
-      
+
       _currentView = 'missions';
       if (typeof redrawWaypointMarkers === 'function') redrawWaypointMarkers();
       var titleEl = document.getElementById('topbar-title');
       if (titleEl) {
         titleEl.textContent = (mode === 'create') ? 'CREATE MISSION' : 'PLAY MISSION';
       }
-      
+
       var tabEl = document.getElementById('tab-' + mode + '-mission');
       if (tabEl) tabEl.classList.add('active');
       var menuEl = document.getElementById('menu-' + mode + '-mission');
@@ -3006,10 +3133,10 @@
       }
     }
 
-    window.onCycleInputChanged = function(val) {
+    window.onCycleInputChanged = function (val) {
       var intVal = parseInt(val) || 1;
       if (intVal < 1) intVal = 1;
-      
+
       var disp = document.getElementById("mission-cycle-val");
       if (disp) {
         if (intVal === 1) {
@@ -3020,7 +3147,7 @@
       }
     };
 
-    window.toggleInfiniteCycles = function(checked) {
+    window.toggleInfiniteCycles = function (checked) {
       var inp = document.getElementById("mission-cycle-input");
       var disp = document.getElementById("mission-cycle-val");
       if (checked) {
@@ -3882,9 +4009,14 @@
       style="background:linear-gradient(135deg, var(--panel), var(--panel2));border:2px solid rgba(249,115,22,0.6);border-radius:20px;width:520px;max-width:92vw;padding:36px 40px;box-shadow:0 0 50px rgba(249,115,22,0.25), 0 24px 80px rgba(0,0,0,0.95);text-align:center;position:relative;overflow:hidden;">
       <!-- Animated pulse ring behind icon -->
       <div style="position:relative;width:100px;height:100px;margin:0 auto 20px;">
-        <div style="position:absolute;inset:0;border:3px solid rgba(249,115,22,0.3);border-radius:50%;animation:pulse-accent 2s ease-in-out infinite;"></div>
-        <div style="position:absolute;inset:8px;border:2px solid rgba(249,115,22,0.15);border-radius:50%;animation:pulse-accent 2s ease-in-out infinite 0.3s;"></div>
-        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px;">🎯</div>
+        <div
+          style="position:absolute;inset:0;border:3px solid rgba(249,115,22,0.3);border-radius:50%;animation:pulse-accent 2s ease-in-out infinite;">
+        </div>
+        <div
+          style="position:absolute;inset:8px;border:2px solid rgba(249,115,22,0.15);border-radius:50%;animation:pulse-accent 2s ease-in-out infinite 0.3s;">
+        </div>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px;">🎯
+        </div>
       </div>
       <div
         style="font-family:var(--font-head);font-size:20px;font-weight:900;color:var(--accent2);margin-bottom:8px;letter-spacing:2px;text-transform:uppercase;text-shadow:0 0 15px rgba(249,115,22,0.4);">
@@ -3897,7 +4029,8 @@
       <div
         style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.25);border-radius:12px;padding:16px 20px;margin-bottom:20px;text-align:left;">
         <div style="font-size:14px;color:var(--text);line-height:1.7;font-weight:500;">
-          The robot has been placed at the <strong style="color:var(--accent);">default position (0, 0)</strong> on the map.
+          The robot has been placed at the <strong style="color:var(--accent);">default position (0, 0)</strong> on the
+          map.
           This is likely <strong style="color:var(--red);">NOT</strong> where the robot actually is.
         </div>
       </div>
@@ -3905,7 +4038,8 @@
         style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:14px 18px;margin-bottom:24px;">
         <div style="font-size:13px;color:#fca5a5;line-height:1.6;">
           <strong>⚠ Before navigation, you MUST:</strong><br>
-          Click <strong style="color:var(--accent2);">🎯 FIX ROBOT POSITION</strong> in the sidebar, then click & drag on the map
+          Click <strong style="color:var(--accent2);">🎯 FIX ROBOT POSITION</strong> in the sidebar, then click & drag
+          on the map
           to set the robot's actual position and heading direction.
         </div>
       </div>
