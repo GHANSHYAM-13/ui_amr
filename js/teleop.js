@@ -130,33 +130,61 @@ document.addEventListener("visibilitychange", function () {
 });
 
 /* ---------- EMERGENCY STOP --------------------------------------------- */
+var _eStopActive = false;
+var _eStopInterval = null;
+
 window.eStop = function() {
-  if (typeof showToast === "function") showToast("🛑 EMERGENCY STOP ACTIVATED", "error");
+  var btn = document.getElementById("e-stop-btn");
   
-  // 1. Hard stop teleop
-  if (!_teleopLocked) stopHard();
-  else {
-    // Force a zero velocity anyway
-    if (typeof cmdVel !== 'undefined' && cmdVel) {
-      cmdVel.publish(new ROSLIB.Message({
-        linear: { x: 0.0, y: 0.0, z: 0.0 },
-        angular: { x: 0.0, y: 0.0, z: 0.0 }
-      }));
-    }
-  }
-  
-  // 2. Stop running mission via backend
-  fetch(SERVER_URL + "/mission/stop", { method: "POST" })
-    .then(function() { 
-      if (typeof showToast === "function") showToast("Mission Cancelled", "info"); 
-    })
-    .catch(function(e) { console.error("eStop mission stop error:", e); });
+  if (!_eStopActive) {
+    _eStopActive = true;
+    if (typeof showToast === "function") showToast("🛑 EMERGENCY STOP ACTIVATED", "error");
     
-  // 3. Update UI
-  var btnStart = document.getElementById("btn-start-mission");
-  if (btnStart) btnStart.innerHTML = "▶ START MISSION";
-  var btnPause = document.getElementById("btn-pause-mission");
-  if (btnPause) btnPause.disabled = true;
-  var btnStop = document.getElementById("btn-stop-mission");
-  if (btnStop) btnStop.disabled = true;
+    if (btn) {
+      btn.innerHTML = "RELEASE E-STOP";
+      btn.style.background = "#b91c1c"; // Darker red to indicate active hold
+      btn.style.color = "#ffffff";
+    }
+    
+    // 1. Force continuous zero velocity to override anything else instantly
+    _eStopInterval = setInterval(function() {
+      if (typeof cmdVel !== 'undefined' && cmdVel) {
+        cmdVel.publish(new ROSLIB.Message({
+          linear: { x: 0.0, y: 0.0, z: 0.0 },
+          angular: { x: 0.0, y: 0.0, z: 0.0 }
+        }));
+      }
+    }, 50); // Publish at 20Hz
+    
+    // 2. Stop running mission via backend
+    fetch(SERVER_URL + "/mission/stop", { method: "POST" })
+      .then(function() { 
+        if (typeof showToast === "function") showToast("Mission Cancelled", "info"); 
+      })
+      .catch(function(e) { console.error("eStop mission stop error:", e); });
+      
+    // 3. Update UI
+    var btnStart = document.getElementById("btn-start-mission");
+    if (btnStart) btnStart.innerHTML = "▶ START MISSION";
+    var btnPause = document.getElementById("btn-pause-mission");
+    if (btnPause) btnPause.disabled = true;
+    var btnStop = document.getElementById("btn-stop-mission");
+    if (btnStop) btnStop.disabled = true;
+    
+  } else {
+    // Release E-STOP
+    _eStopActive = false;
+    if (_eStopInterval) {
+      clearInterval(_eStopInterval);
+      _eStopInterval = null;
+    }
+    
+    if (btn) {
+      btn.innerHTML = "E-STOP";
+      btn.style.background = "rgba(239, 68, 68, 0.15)";
+      btn.style.color = "var(--red, #ef4444)";
+    }
+    
+    if (typeof showToast === "function") showToast("✅ E-STOP RELEASED", "success");
+  }
 };
