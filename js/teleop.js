@@ -128,3 +128,35 @@ document.addEventListener("keyup", function (e) {
 document.addEventListener("visibilitychange", function () {
   if (document.hidden && !_teleopLocked) stopHard();
 });
+
+/* ---------- EMERGENCY STOP --------------------------------------------- */
+window.eStop = function() {
+  if (typeof showToast === "function") showToast("🛑 EMERGENCY STOP ACTIVATED", "error");
+  
+  // 1. Hard stop teleop
+  if (!_teleopLocked) stopHard();
+  else {
+    // Force a zero velocity anyway
+    if (typeof cmdVel !== 'undefined' && cmdVel) {
+      cmdVel.publish(new ROSLIB.Message({
+        linear: { x: 0.0, y: 0.0, z: 0.0 },
+        angular: { x: 0.0, y: 0.0, z: 0.0 }
+      }));
+    }
+  }
+  
+  // 2. Stop running mission via backend
+  fetch(SERVER_URL + "/mission/stop", { method: "POST" })
+    .then(function() { 
+      if (typeof showToast === "function") showToast("Mission Cancelled", "info"); 
+    })
+    .catch(function(e) { console.error("eStop mission stop error:", e); });
+    
+  // 3. Update UI
+  var btnStart = document.getElementById("btn-start-mission");
+  if (btnStart) btnStart.innerHTML = "▶ START MISSION";
+  var btnPause = document.getElementById("btn-pause-mission");
+  if (btnPause) btnPause.disabled = true;
+  var btnStop = document.getElementById("btn-stop-mission");
+  if (btnStop) btnStop.disabled = true;
+};
