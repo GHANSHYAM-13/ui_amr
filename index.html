@@ -1888,6 +1888,29 @@
     #view-missions.mode-play .create-only {
       display: none !important;
     }
+    /* Light Mode Progress Panel Fixes */
+    body.theme-light #mission-progress-panel {
+      background: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    body.theme-light #mission-progress-panel span,
+    body.theme-light #mission-progress-panel div {
+      text-shadow: none !important;
+    }
+    body.theme-light #mission-progress-panel [style*="color:var(--text)"] {
+      color: #1e293b !important;
+    }
+    body.theme-light #mission-progress-panel [style*="rgba(255,255,255,0.04)"] {
+      background: #f1f5f9 !important;
+    }
+    body.theme-light #mission-progress-panel [style*="rgba(255,255,255,0.06)"] {
+      background: #f1f5f9 !important;
+    }
+    body.theme-light #mission-progress-panel [style*="rgba(255,255,255,0.07)"] {
+      background: #e2e8f0 !important;
+    }
+
   </style>
 </head>
 
@@ -1954,6 +1977,7 @@
       <div class="topbar-controls" style="display: flex; gap: 10px; align-items: center; margin-left: 20px;">
          <button class="btn-primary" style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; background:rgba(14,165,233,0.14); border:1px solid rgba(14,165,233,0.45); color:var(--accent); box-shadow:none;" onclick="switchView('localization')" id="top-nav-navigation">NAVIGATION</button>
          <button class="btn-primary" style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;" onclick="toggleRobot()" id="btn-start-robot">START ROBOT</button>
+         <button class="btn-primary" style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.4); color:#3b82f6;" onclick="document.getElementById('manual-drive-modal').style.display='flex'">🎮 MANUAL DRIVE</button>
          <button class="btn-danger" style="padding: 6px 14px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;" onclick="eStop()">E-STOP</button>
       </div>
       <div class="topbar-status">
@@ -2272,7 +2296,12 @@
               <button class="btn-pose" id="btn-pose" onclick="enablePoseEstimate()" disabled>🎯 FIX ROBOT
                 POSITION</button>
               <button class="btn-goal" id="btn-goal" onclick="enableGoalPose()" disabled>🟢 GO TO POINT</button>
-              <button class="btn-home" id="btn-home" onclick="goHome()" disabled>🏠 RETURN TO BASE</button>
+              <button class="btn-home" id="btn-home" onclick="goHome()" disabled style="display:flex; align-items:center; justify-content:center; gap:8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 3L2 12h3v8h5v-6h4v6h5v-8h3L12 3z"/>
+                </svg>
+                RETURN TO BASE
+              </button>
               <!-- STOP MOVING removed — global E-STOP in topbar covers this -->
               <button id="btn-dock" onclick="toggleDock()" style="display:block;width:100%;padding:10px 14px;font-weight:600;margin-bottom:5px;
                      border-radius:7px;cursor:pointer;transition:all 0.15s;font-family:var(--font-body);font-size:13px;
@@ -2741,6 +2770,35 @@
   <input type="hidden" id="speed-linear" value="0.4">
   <input type="hidden" id="speed-angular" value="0.8">
 
+  <!-- ── MANUAL DRIVE POPUP ────────────────────────────────────────────── -->
+  <div id="manual-drive-modal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; backdrop-filter:blur(3px);">
+    <div style="background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:32px; width:340px; box-shadow:0 15px 50px rgba(0,0,0,0.5); text-align:center;">
+      <div style="font-family:var(--font-head); font-size:16px; font-weight:700; margin-bottom:24px; color:var(--accent); letter-spacing:2px;">MANUAL OVERRIDE</div>
+      
+      <!-- D-Pad -->
+      <div class="dpad" style="margin: 0 auto;">
+        <button class="dpad-btn up" onmousedown="forward()" onmouseup="releaseButton()" onmouseleave="releaseButton()" ontouchstart="forward()" ontouchend="releaseButton()">▲</button>
+        <button class="dpad-btn left" onmousedown="left()" onmouseup="releaseButton()" onmouseleave="releaseButton()" ontouchstart="left()" ontouchend="releaseButton()">◀</button>
+        <button class="dpad-btn right" onmousedown="right()" onmouseup="releaseButton()" onmouseleave="releaseButton()" ontouchstart="right()" ontouchend="releaseButton()">▶</button>
+        <button class="dpad-btn down" onmousedown="back()" onmouseup="releaseButton()" onmouseleave="releaseButton()" ontouchstart="back()" ontouchend="releaseButton()">▼</button>
+      </div>
+
+      <div style="margin-top:24px; background:var(--bg); padding:16px; border-radius:10px; border:1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--muted); font-weight:700; margin-bottom:12px; letter-spacing:1px;">
+          <span>DRIVING SPEED</span>
+          <span id="manual-spd-val" style="color:var(--text);">0.15 m/s</span>
+        </div>
+        <input type="range" id="manual-spd-range" min="0.05" max="0.3" step="0.01" value="0.15" style="width:100%;" oninput="updateSpeed(this.value, 'manual-spd-val')">
+      </div>
+
+      <button class="btn-primary" style="margin-top:28px; width:100%; padding:12px; font-size:14px; font-weight:600; letter-spacing:1px;" onclick="document.getElementById('manual-drive-modal').style.display='none'">CLOSE</button>
+    </div>
+  </div>
+
+  <!-- Hidden teleop inputs -->
+  <input type="hidden" id="speed-linear" value="0.15">
+  <input type="hidden" id="speed-angular" value="0.22">
+
   <!-- ═══════════════════════════════════════════════════════
      SCRIPTS
 ════════════════════════════════════════════════════════ -->
@@ -2781,7 +2839,7 @@
 
     /* Init all speed sliders to 0.15 m/s */
     (function () {
-      ['home-spd-range', 'map-spd-range', 'loc-spd-range', 'del-spd-range'].forEach(function (id) {
+      ['home-spd-range', 'map-spd-range', 'loc-spd-range', 'del-spd-range', 'manual-spd-range'].forEach(function (id) {
         var el = document.getElementById(id);
         if (el) el.addEventListener('input', function () { updateSpeed(this.value, this.id.replace('-range', '-val')); });
       });
@@ -2790,6 +2848,7 @@
       updateSpeed(0.15, 'map-spd-val');
       updateSpeed(0.15, 'loc-spd-val');
       updateSpeed(0.15, 'del-spd-val');
+      updateSpeed(0.15, 'manual-spd-val');
     })();
 
     /* ── LOGIN ────────────────────────────────────────────── */
@@ -2926,6 +2985,8 @@
         viewEl.classList.add('mode-' + mode);
       }
       
+      _currentView = 'missions';
+      if (typeof redrawWaypointMarkers === 'function') redrawWaypointMarkers();
       var titleEl = document.getElementById('topbar-title');
       if (titleEl) {
         titleEl.textContent = (mode === 'create') ? 'CREATE MISSION' : 'PLAY MISSION';
@@ -3001,6 +3062,7 @@
         if (hMenu) hMenu.classList.add('active');
       }
       _currentView = name;
+      if (typeof redrawWaypointMarkers === 'function') redrawWaypointMarkers();
 
       var titleMap = {
         'home': 'HOME',

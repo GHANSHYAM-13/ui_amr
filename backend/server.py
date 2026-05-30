@@ -1320,7 +1320,7 @@ def resumeMission():
     try:
         subprocess.Popen(
             ["ros2", "topic", "pub", "--once", "/speed_limit",
-             "nav2_msgs/msg/SpeedLimit", "{speed_limit: 0.0, percentage: true}"],
+             "nav2_msgs/msg/SpeedLimit", "{speed_limit: 0.0, percentage: false}"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             preexec_fn=os.setsid
@@ -1352,7 +1352,7 @@ def stopMission():
     try:
         subprocess.Popen(
             ["ros2", "topic", "pub", "--once", "/speed_limit",
-             "nav2_msgs/msg/SpeedLimit", "{speed_limit: 0.0, percentage: true}"],
+             "nav2_msgs/msg/SpeedLimit", "{speed_limit: 0.0, percentage: false}"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             preexec_fn=os.setsid

@@ -701,7 +701,7 @@ var ROBOT_H = 0.600;
 
 var SCAN_MAX_RANGE  = 20.0;   /* metres — cap stray inf readings        */
 var SCAN_DOT_SIZE   = 2;      /* pixels per dot side at reference zoom  */
-var SCAN_COLOR      = "#ef4444";  /* red — matches RViz default laser color */
+var SCAN_COLOR      = "#3b82f6";  /* blueish — matches requested theme */
 
 /* ── overlay canvas ─────────────────────────────────────────────────── */
 var _scanCanvas = (function() {

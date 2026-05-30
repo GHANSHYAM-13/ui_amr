@@ -63,23 +63,65 @@ function enableWaypointMode() {
 function redrawWaypointMarkers() {
   if (!window.waypointLayer || !window.stage) return;
   waypointLayer.removeAllChildren();
+  
+  if (window._currentView && window._currentView !== 'missions') {
+    stage.update();
+    return;
+  }
+
   var scaleX_fix = (typeof FLIP_X !== "undefined" && FLIP_X < 0) ? -1 : 1;
   waypoints.forEach(function (wp, idx) {
-    var dot = new createjs.Shape();
-    dot.graphics.beginFill("#f97316").drawCircle(0, 0, 0.10);
-    dot.x = wp.x; dot.y = wp.y;
+    var wpGrp = new createjs.Container();
+    wpGrp.x = wp.x; wpGrp.y = wp.y;
+    wpGrp.cursor = "pointer";
 
+    var pin = new createjs.Shape();
+    pin.graphics.setStrokeStyle(0.04).beginStroke("#ffffff").beginFill("#3b82f6").drawCircle(0, 0, 0.16)
+       .endStroke().beginFill("#ffffff").drawCircle(0, 0, 0.05);
+    
     var tick = new createjs.Shape();
-    tick.graphics.setStrokeStyle(0.035).beginStroke("#f97316").moveTo(0, 0).lineTo(0.18, 0);
-    tick.x = wp.x; tick.y = wp.y; tick.rotation = wp.yaw * (180 / Math.PI);
+    tick.graphics.setStrokeStyle(0.06).beginStroke("#3b82f6").moveTo(0.16, 0).lineTo(0.35, 0);
+    tick.rotation = wp.yaw * (180 / Math.PI);
 
-    var lbl = new createjs.Text(String(idx + 1), "bold 0.14px Arial", "#ffffff");
+    var lbl = new createjs.Text(String(idx + 1), "bold 0.16px Arial", "#ffffff");
     lbl.textAlign = "center"; lbl.textBaseline = "middle";
-    lbl.x = wp.x; lbl.y = wp.y; lbl.scaleY = -1; lbl.scaleX = scaleX_fix;
+    lbl.y = 0.28;
+    lbl.scaleY = -1; lbl.scaleX = scaleX_fix;
+    
+    var shadow = new createjs.Text(String(idx + 1), "bold 0.16px Arial", "#000000");
+    shadow.textAlign = "center"; shadow.textBaseline = "middle";
+    shadow.y = 0.29; shadow.x = 0.01;
+    shadow.scaleY = -1; shadow.scaleX = scaleX_fix;
+    shadow.alpha = 0.5;
 
-    waypointLayer.addChild(dot);
-    waypointLayer.addChild(tick);
-    waypointLayer.addChild(lbl);
+    wpGrp.addChild(tick);
+    wpGrp.addChild(pin);
+    wpGrp.addChild(shadow);
+    wpGrp.addChild(lbl);
+
+    wpGrp.on("mousedown", function(evt) {
+      if (typeof window.viewer !== "undefined") {
+        var pos = window.viewer.scene.globalToLocal(evt.stageX, evt.stageY);
+        this.offset = { x: this.x - pos.x, y: this.y - pos.y };
+      }
+    });
+    wpGrp.on("pressmove", function(evt) {
+      if (typeof window.viewer !== "undefined") {
+        var pos = window.viewer.scene.globalToLocal(evt.stageX, evt.stageY);
+        this.x = pos.x + this.offset.x;
+        this.y = pos.y + this.offset.y;
+        stage.update();
+      }
+    });
+    wpGrp.on("pressup", function(evt) {
+      wp.x = parseFloat(this.x.toFixed(3));
+      wp.y = parseFloat(this.y.toFixed(3));
+      if (typeof saveMissionFile === "function") {
+        saveMissionFile({ notify: true }).catch(function(){});
+      }
+    });
+
+    waypointLayer.addChild(wpGrp);
   });
   stage.update();
 }
