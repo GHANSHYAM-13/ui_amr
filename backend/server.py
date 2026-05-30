@@ -317,6 +317,14 @@ mission_process      = None   # mission_runner.py subprocess
 active_map_yaml      = None
 _localization_start_time = 0
 
+# Mission runtime metadata (populated on start, cleared on stop)
+mission_meta = {
+    "cycles": -1,
+    "total_wps": 0,
+    "map": "",
+    "start_time": 0,
+}
+
 
 def kill_process(proc):
     if not proc:
@@ -1146,7 +1154,7 @@ def getMissionHistory():
 @app.route("/mission/start", methods=["POST"])
 def startMission():
     """Launch mission_runner.py as a background process."""
-    global mission_process
+    global mission_process, mission_meta
 
     # Stop any running mission first
     kill_process(mission_process)
@@ -1161,19 +1169,38 @@ def startMission():
         except Exception:
             pass
 
+    # Clear progress file
+    progress_file = os.path.join(MISSION_FOLDER, "mission_progress.json")
+    try:
+        with open(progress_file, "w") as f:
+            import json as _json
+            _json.dump({"cycle": 0, "waypoint": 0, "waypoint_name": ""}, f)
+    except Exception:
+        pass
+
     data = request.json or {}
     cycles = data.get("cycles", -1)
 
     # Parse waypoints names for the history log
     waypoints = []
+    total_wps = 0
     try:
         with open(MISSION_FILE, "r") as f:
             m_data = json.load(f)
             waypoints = [w.get("name", "Station") for w in m_data.get("waypoints", [])]
+            total_wps = len(waypoints)
     except Exception:
         pass
 
     _add_mission_history(active_map_yaml, waypoints, cycles)
+
+    # Save metadata for status polling
+    mission_meta = {
+        "cycles": cycles,
+        "total_wps": total_wps,
+        "map": active_map_yaml or "",
+        "start_time": __import__("time").time(),
+    }
 
     cmd = ["python3", RUNNER_SCRIPT]
     if cycles != -1:
@@ -1326,8 +1353,8 @@ def stopMission():
 
 @app.route("/mission/status", methods=["GET"])
 def missionStatus():
-    """Check if mission_runner is running and if it is paused."""
-    global mission_process
+    """Check if mission_runner is running and if it is paused. Returns rich progress info."""
+    global mission_process, mission_meta
     running = mission_process is not None and mission_process.poll() is None
     paused = os.path.exists(PAUSE_FLAG_FILE)
     
@@ -1336,9 +1363,30 @@ def missionStatus():
         _update_mission_history_status("Completed")
         mission_process = None
 
+    # Read live progress written by mission_runner.py
+    progress = {"cycle": 0, "waypoint": 0, "waypoint_name": ""}
+    progress_file = os.path.join(MISSION_FOLDER, "mission_progress.json")
+    try:
+        if os.path.exists(progress_file):
+            with open(progress_file) as f:
+                progress = json.load(f)
+    except Exception:
+        pass
+
+    elapsed = 0
+    if running and mission_meta.get("start_time"):
+        elapsed = int(__import__("time").time() - mission_meta["start_time"])
+
     return jsonify({
         "running": running,
-        "paused": paused
+        "paused": paused,
+        "cycle": progress.get("cycle", 0),
+        "waypoint": progress.get("waypoint", 0),
+        "waypoint_name": progress.get("waypoint_name", ""),
+        "total_cycles": mission_meta.get("cycles", -1),
+        "total_wps": mission_meta.get("total_wps", 0),
+        "map": mission_meta.get("map", ""),
+        "elapsed_seconds": elapsed,
     })
 
 

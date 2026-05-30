@@ -455,6 +455,7 @@ function startMission() {
     .then(function (data) {
       missionRunning = true;
       missionPaused = false;
+      _missionStartEpoch = Date.now();
       if (typeof lockTeleop === "function") lockTeleop();
       _saveMissionSession();
       _uiRunning();
@@ -512,6 +513,82 @@ function togglePauseMission() {
 
 /* Poll Timer and loop status check */
 var _pollTimer = null;
+var _elapsedTicker = null;
+var _missionStartEpoch = 0;   // local epoch when mission started (ms)
+
+function _fmtTime(seconds) {
+  seconds = Math.max(0, Math.round(seconds));
+  var m = Math.floor(seconds / 60);
+  var s = seconds % 60;
+  return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function _updateElapsedUI() {
+  var elapsed = Math.round((Date.now() - _missionStartEpoch) / 1000);
+  var t = _fmtTime(elapsed);
+  var el1 = document.getElementById('mission-elapsed-label');
+  var el2 = document.getElementById('mission-elapsed-time');
+  if (el1) el1.textContent = t;
+  if (el2) el2.textContent = t;
+}
+
+function _updateProgressUI(d) {
+  /* Cycle bar */
+  var totalCycles = d.total_cycles;
+  var currentCycle = d.cycle || 0;
+  var cycleText   = document.getElementById('mission-cycle-text');
+  var cycleBar    = document.getElementById('mission-cycle-bar');
+  var cyclesLeft  = document.getElementById('mission-cycles-left');
+  if (totalCycles === -1 || totalCycles === undefined) {
+    if (cycleText) cycleText.textContent = currentCycle + ' / ∞';
+    if (cycleBar)  cycleBar.style.width = '0%';
+    if (cyclesLeft) cyclesLeft.textContent = '∞';
+  } else {
+    if (cycleText) cycleText.textContent = currentCycle + ' / ' + totalCycles;
+    if (cycleBar)  cycleBar.style.width = (totalCycles > 0 ? Math.min(100, (currentCycle / totalCycles) * 100) : 0) + '%';
+    if (cyclesLeft) cyclesLeft.textContent = Math.max(0, totalCycles - currentCycle);
+  }
+
+  /* Waypoint bar */
+  var totalWps = d.total_wps || 0;
+  var currentWp = d.waypoint || 0;
+  var wpText  = document.getElementById('mission-wp-text');
+  var wpBar   = document.getElementById('mission-wp-bar');
+  var wpName  = document.getElementById('mission-wp-name');
+  if (wpText) wpText.textContent = currentWp + ' / ' + totalWps;
+  if (wpBar)  wpBar.style.width = (totalWps > 0 ? Math.min(100, (currentWp / totalWps) * 100) : 0) + '%';
+  if (wpName) wpName.textContent = d.waypoint_name || '—';
+
+  /* Bottom badge */
+  var badge = document.getElementById('mission-progress-badge');
+  if (badge) badge.textContent = currentCycle + ' / ' + (totalCycles === -1 ? '∞' : totalCycles);
+
+  /* Active map name */
+  var mapName = document.getElementById('missions-map-name');
+  if (mapName && d.map) mapName.textContent = d.map;
+
+  /* Estimated remaining */
+  var estEl = document.getElementById('mission-est-remaining');
+  if (estEl && totalCycles > 0 && currentCycle > 0 && d.elapsed_seconds > 0) {
+    var secPerCycle = d.elapsed_seconds / currentCycle;
+    var remSec = (totalCycles - currentCycle) * secPerCycle;
+    estEl.textContent = _fmtTime(Math.round(remSec));
+  } else if (estEl) {
+    estEl.textContent = '—';
+  }
+
+  /* Paused / running state label */
+  var stateLabel = document.getElementById('mission-run-state-label');
+  var pulseDot   = document.getElementById('mission-pulse-dot');
+  if (d.paused) {
+    if (stateLabel) { stateLabel.textContent = 'PAUSED'; stateLabel.style.color = 'var(--yellow)'; }
+    if (pulseDot) { pulseDot.style.background = 'var(--yellow)'; pulseDot.style.boxShadow = '0 0 6px var(--yellow)'; pulseDot.style.animation = 'none'; }
+  } else {
+    if (stateLabel) { stateLabel.textContent = 'RUNNING'; stateLabel.style.color = 'var(--green)'; }
+    if (pulseDot) { pulseDot.style.background = 'var(--green)'; pulseDot.style.boxShadow = '0 0 6px var(--green)'; pulseDot.style.animation = 'pulse 1.2s infinite'; }
+  }
+}
+
 function _poll() {
   if (_pollTimer) { clearTimeout(_pollTimer); _pollTimer = null; }
   if (!missionRunning) return;
@@ -523,7 +600,10 @@ function _poll() {
 
       missionPaused = d.paused;
 
-      // Update UI Status Indicators
+      // Update rich progress UI
+      _updateProgressUI(d);
+
+      // Update legacy status indicators
       var statusBadge = document.getElementById("mission-status-badge");
       var pauseBtn = document.getElementById("btn-pause-mission");
 
@@ -553,6 +633,7 @@ function _poll() {
 
       if (!d.running) {
         missionRunning = false;
+        if (_elapsedTicker) { clearInterval(_elapsedTicker); _elapsedTicker = null; }
         if (typeof unlockTeleop === "function") unlockTeleop();
         if (typeof clearNavPath === "function") clearNavPath();
         _clearMissionSession();
@@ -578,6 +659,7 @@ function _uiRunning() {
   var bs = document.getElementById("btn-start-mission");
   var mrc = document.getElementById("mission-running-controls");
   var indicators = document.getElementById("mission-status-badge");
+  var progressPanel = document.getElementById("mission-progress-panel");
 
   var cycleInput = document.getElementById("mission-cycle-input");
   var cycleInfinite = document.getElementById("mission-cycle-infinite");
@@ -585,15 +667,22 @@ function _uiRunning() {
   if (bs) bs.style.display = "none";
   if (mrc) mrc.style.display = "flex";
   if (indicators) indicators.style.display = "flex";
+  if (progressPanel) progressPanel.style.display = "flex";
 
   if (cycleInput) cycleInput.disabled = true;
   if (cycleInfinite) cycleInfinite.disabled = true;
+
+  // Start elapsed ticker
+  if (_missionStartEpoch === 0) _missionStartEpoch = Date.now();
+  if (_elapsedTicker) clearInterval(_elapsedTicker);
+  _elapsedTicker = setInterval(_updateElapsedUI, 1000);
 }
 
 function _uiStopped() {
   var bs = document.getElementById("btn-start-mission");
   var mrc = document.getElementById("mission-running-controls");
   var indicators = document.getElementById("mission-status-badge");
+  var progressPanel = document.getElementById("mission-progress-panel");
 
   var cycleInput = document.getElementById("mission-cycle-input");
   var cycleInfinite = document.getElementById("mission-cycle-infinite");
@@ -601,11 +690,16 @@ function _uiStopped() {
   if (bs) { bs.style.display = "flex"; bs.disabled = (waypoints.length === 0); }
   if (mrc) mrc.style.display = "none";
   if (indicators) indicators.style.display = "none";
+  if (progressPanel) progressPanel.style.display = "none";
 
   if (cycleInput && !(cycleInfinite && cycleInfinite.checked)) {
     cycleInput.disabled = false;
   }
   if (cycleInfinite) cycleInfinite.disabled = false;
+
+  // Stop ticker
+  if (_elapsedTicker) { clearInterval(_elapsedTicker); _elapsedTicker = null; }
+  _missionStartEpoch = 0;
 }
 
 /* Page load entry point initialization */
@@ -626,7 +720,11 @@ window.initMissionsView = function () {
 function _saveMissionSession() {
   try {
     var m = document.getElementById("mapSelect");
-    sessionStorage.setItem(_MISSION_KEY, JSON.stringify({ running: true, map: m ? m.value : "" }));
+    sessionStorage.setItem(_MISSION_KEY, JSON.stringify({
+      running: true,
+      map: m ? m.value : "",
+      startEpoch: Date.now()
+    }));
   } catch (e) { }
 }
 function _clearMissionSession() { try { sessionStorage.removeItem(_MISSION_KEY); } catch (e) { } }
@@ -662,6 +760,13 @@ function _restoreRunningMission(sess) {
   sess = sess || { running: true, map: _missionMapFallback() };
   missionRunning = true;
   if (typeof lockTeleop === "function") lockTeleop();
+
+  // Restore elapsed time from saved epoch
+  if (sess.startEpoch) {
+    _missionStartEpoch = sess.startEpoch;
+  } else {
+    _missionStartEpoch = Date.now();
+  }
   _uiRunning();
 
   if (sess.map) {
