@@ -63,7 +63,7 @@ function enableWaypointMode() {
 function redrawWaypointMarkers() {
   if (!window.waypointLayer || !window.stage) return;
   waypointLayer.removeAllChildren();
-  
+
   if (window._currentView && window._currentView !== 'missions') {
     stage.update();
     return;
@@ -78,12 +78,12 @@ function redrawWaypointMarkers() {
     // Red Map Pin (Google Maps style)
     var pin = new createjs.Shape();
     pin.graphics.beginFill("#ea4335")
-       .moveTo(0, 0)
-       .bezierCurveTo(0.12, 0.15, 0.2, 0.25, 0.2, 0.35)
-       .arc(0, 0.35, 0.2, 0, Math.PI, false)
-       .bezierCurveTo(-0.2, 0.25, -0.12, 0.15, 0, 0)
-       .closePath();
-       
+      .moveTo(0, 0)
+      .bezierCurveTo(0.12, 0.15, 0.2, 0.25, 0.2, 0.35)
+      .arc(0, 0.35, 0.2, 0, Math.PI, false)
+      .bezierCurveTo(-0.2, 0.25, -0.12, 0.15, 0, 0)
+      .closePath();
+
     var inner = new createjs.Shape();
     inner.graphics.beginFill("#7f1d1d").drawCircle(0, 0.35, 0.08);
 
@@ -91,7 +91,7 @@ function redrawWaypointMarkers() {
     lbl.textAlign = "center"; lbl.textBaseline = "middle";
     lbl.y = 0.35;
     lbl.scaleY = -1; lbl.scaleX = scaleX_fix;
-    
+
     var shadow = new createjs.Text(String(idx + 1), "bold 0.12px Arial", "#000000");
     shadow.textAlign = "center"; shadow.textBaseline = "middle";
     shadow.y = 0.36; shadow.x = 0.01;
@@ -103,13 +103,13 @@ function redrawWaypointMarkers() {
     wpGrp.addChild(shadow);
     wpGrp.addChild(lbl);
 
-    wpGrp.on("mousedown", function(evt) {
+    wpGrp.on("mousedown", function (evt) {
       if (typeof window.viewer !== "undefined") {
         var pos = window.viewer.scene.globalToLocal(evt.stageX, evt.stageY);
         this.offset = { x: this.x - pos.x, y: this.y - pos.y };
       }
     });
-    wpGrp.on("pressmove", function(evt) {
+    wpGrp.on("pressmove", function (evt) {
       if (typeof window.viewer !== "undefined") {
         var pos = window.viewer.scene.globalToLocal(evt.stageX, evt.stageY);
         this.x = pos.x + this.offset.x;
@@ -117,11 +117,11 @@ function redrawWaypointMarkers() {
         stage.update();
       }
     });
-    wpGrp.on("pressup", function(evt) {
+    wpGrp.on("pressup", function (evt) {
       wp.x = parseFloat(this.x.toFixed(3));
       wp.y = parseFloat(this.y.toFixed(3));
       if (typeof saveMissionFile === "function") {
-        saveMissionFile({ notify: true }).catch(function(){});
+        saveMissionFile({ notify: true }).catch(function () { });
       }
     });
 
@@ -505,7 +505,7 @@ function startMission() {
       }
       window._missionCycleDistance = totalDist;
       console.log("[mission] Calculated cycle distance: " + totalDist.toFixed(2) + "m");
-      
+
       return fetch(SERVER_URL + "/mission/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -575,9 +575,9 @@ function togglePauseMission() {
 /* Poll Timer and loop status check */
 var _pollTimer = null;
 var _elapsedTicker = null;
-var _missionStartEpoch    = 0;   // kept for session restore; not used for display
+var _missionStartEpoch = 0;   // kept for session restore; not used for display
 var _missionServerElapsed = 0;   // last elapsed_seconds received from server
-var _missionLastPollMs    = 0;   // Date.now() when last poll arrived
+var _missionLastPollMs = 0;   // Date.now() when last poll arrived
 
 function _fmtTime(seconds) {
   seconds = Math.max(0, Math.round(seconds));
@@ -598,23 +598,23 @@ function _updateElapsedUI() {
 }
 
 function _updateProgressUI(d) {
-  var totalCycles  = d.total_cycles;          // -1 = infinite
-  var currentCycle = d.cycle   || 0;
-  var totalWps     = d.total_wps || 0;
-  var currentWp    = d.waypoint || 0;
-  var elapsed      = d.elapsed_seconds || 0;
+  var totalCycles = d.total_cycles;          // -1 = infinite
+  var currentCycle = d.cycle || 0;
+  var totalWps = d.total_wps || 0;
+  var currentWp = d.waypoint || 0;
+  var elapsed = d.elapsed_seconds || 0;
   var totalDistance = d.total_distance || window._missionCycleDistance || 0;
 
   // ── Sync elapsed ticker to server truth ─────────────────────────────────
   _missionServerElapsed = elapsed;
-  _missionLastPollMs    = Date.now();
+  _missionLastPollMs = Date.now();
 
   // ── Cycle bar ─────────────────────────────────────────────────────────────
-  var cycleBar      = document.getElementById('mission-cycle-bar');
+  var cycleBar = document.getElementById('mission-cycle-bar');
   var cycleBarLabel = document.getElementById('mission-cycle-bar-label');
-  var cyclePct      = document.getElementById('mission-cycle-pct');
-  var cycleThumb    = document.getElementById('mission-cycle-thumb');
-  var cyclesLeft    = document.getElementById('mission-cycles-left');
+  var cyclePct = document.getElementById('mission-cycle-pct');
+  var cycleThumb = document.getElementById('mission-cycle-thumb');
+  var cyclesLeft = document.getElementById('mission-cycles-left');
 
   var cyclePctVal = 0;
   if (totalCycles > 0) {
@@ -623,8 +623,8 @@ function _updateProgressUI(d) {
     cyclePctVal = Math.min(100, Math.round((currentCycle / totalCycles) * 100));
   }
 
-  if (cycleBar)      cycleBar.style.width = cyclePctVal + '%';
-  if (cyclePct)      cyclePct.textContent  = cyclePctVal + '%';
+  if (cycleBar) cycleBar.style.width = cyclePctVal + '%';
+  if (cyclePct) cyclePct.textContent = cyclePctVal + '%';
   if (cycleBarLabel) {
     if (totalCycles === -1) {
       cycleBarLabel.textContent = 'Cycle ' + currentCycle + '  (∞)';
@@ -639,26 +639,26 @@ function _updateProgressUI(d) {
   }
 
   // ── Waypoint bar ──────────────────────────────────────────────────────────
-  var wpBar      = document.getElementById('mission-wp-bar');
+  var wpBar = document.getElementById('mission-wp-bar');
   var wpBarLabel = document.getElementById('mission-wp-bar-label');
-  var wpPct      = document.getElementById('mission-wp-pct');
-  var wpName     = document.getElementById('mission-wp-name');
+  var wpPct = document.getElementById('mission-wp-pct');
+  var wpName = document.getElementById('mission-wp-name');
 
   var wpPctVal = totalWps > 0 ? Math.min(100, Math.round((currentWp / totalWps) * 100)) : 0;
-  if (wpBar)      wpBar.style.width   = wpPctVal + '%';
-  if (wpPct)      wpPct.textContent   = wpPctVal + '%';
+  if (wpBar) wpBar.style.width = wpPctVal + '%';
+  if (wpPct) wpPct.textContent = wpPctVal + '%';
   if (wpBarLabel) wpBarLabel.textContent = currentWp + ' / ' + totalWps + (totalWps > 0 ? ' wp' : '');
-  if (wpName)     wpName.textContent  = d.waypoint_name || '';
+  if (wpName) wpName.textContent = d.waypoint_name || '';
 
   // ── Distance-to-Travel Progress ──────────────────────────────────────────
   var distEl = document.getElementById('mission-distance-remaining');
-  var distBar      = document.getElementById('mission-time-bar');
+  var distBar = document.getElementById('mission-time-bar');
   var distBarLabel = document.getElementById('mission-time-bar-label');
 
   var distPctVal = 0;
-  var remDist    = 0;
+  var remDist = 0;
   var cycleTotal = totalDistance > 0 ? totalDistance : 0;
-  
+
   if (cycleTotal > 0) {
     var distTraveled = (currentCycle - 1) * cycleTotal;
     if (currentWp > 0 && totalWps > 0) {
@@ -668,7 +668,7 @@ function _updateProgressUI(d) {
     distPctVal = cycleTotal > 0 ? Math.min(100, Math.round((distTraveled / ((totalCycles > 0 ? totalCycles : 1) * cycleTotal)) * 100)) : 0;
   }
 
-  if (distBar)      distBar.style.width = distPctVal + '%';
+  if (distBar) distBar.style.width = distPctVal + '%';
   if (distBarLabel) {
     if (cycleTotal > 0) {
       var distTrav = totalCycles > 0 ? ((currentCycle - 1 + (currentWp / totalWps)) * cycleTotal) : 0;
@@ -680,11 +680,11 @@ function _updateProgressUI(d) {
     }
   }
   if (distEl) distEl.textContent = remDist > 0 ? remDist.toFixed(1) + 'm' : '—';
-  
+
   // Update main display box
   var distDisplay = document.getElementById('mission-distance-display');
   if (distDisplay) distDisplay.textContent = remDist > 0 ? remDist.toFixed(1) + 'm' : '—';
-  
+
   var wpDisplay = document.getElementById('mission-current-wp');
   if (wpDisplay) wpDisplay.textContent = currentWp + ' / ' + totalWps;
 
@@ -698,13 +698,13 @@ function _updateProgressUI(d) {
 
   // ── Running / Paused state indicator ─────────────────────────────────────
   var stateLabel = document.getElementById('mission-run-state-label');
-  var pulseDot   = document.getElementById('mission-pulse-dot');
+  var pulseDot = document.getElementById('mission-pulse-dot');
   if (d.paused) {
-    if (stateLabel) { stateLabel.textContent = 'PAUSED';  stateLabel.style.color = 'var(--yellow)'; }
-    if (pulseDot)  { pulseDot.style.background = 'var(--yellow)'; pulseDot.style.boxShadow = '0 0 6px var(--yellow)'; pulseDot.style.animation = 'none'; }
+    if (stateLabel) { stateLabel.textContent = 'PAUSED'; stateLabel.style.color = 'var(--yellow)'; }
+    if (pulseDot) { pulseDot.style.background = 'var(--yellow)'; pulseDot.style.boxShadow = '0 0 6px var(--yellow)'; pulseDot.style.animation = 'none'; }
   } else {
     if (stateLabel) { stateLabel.textContent = 'RUNNING'; stateLabel.style.color = 'var(--green)'; }
-    if (pulseDot)  { pulseDot.style.background = 'var(--green)';  pulseDot.style.boxShadow = '0 0 8px var(--green)';  pulseDot.style.animation = 'pulse 1.2s infinite'; }
+    if (pulseDot) { pulseDot.style.background = 'var(--green)'; pulseDot.style.boxShadow = '0 0 8px var(--green)'; pulseDot.style.animation = 'pulse 1.2s infinite'; }
   }
 }
 
@@ -906,7 +906,7 @@ function _restoreRunningMission(sess) {
   _poll();
 }
 
-window.saveNamedMissionPrompt = function() {
+window.saveNamedMissionPrompt = function () {
   if (waypoints.length === 0) {
     showToast("⚠ Cannot save an empty mission configuration", "error");
     return;
@@ -919,57 +919,57 @@ window.saveNamedMissionPrompt = function() {
     showToast("⚠ Mission name cannot be empty", "error");
     return;
   }
-  
+
   saveMissionFile()
-  .then(function() {
-    return fetch(SERVER_URL + "/mission/save_named", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name, waypoints: waypoints })
+    .then(function () {
+      return fetch(SERVER_URL + "/mission/save_named", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name, waypoints: waypoints })
+      });
+    })
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function (data) {
+      if (data.status === "success") {
+        window._currentMissionName = name;
+        showToast("💾 Mission successfully saved as: " + data.name, "success");
+        if (typeof loadSavedMissionsList === "function") loadSavedMissionsList();
+      } else {
+        showToast("⚠ Failed to save named mission: " + (data.message || "unknown"), "error");
+      }
+    })
+    .catch(function (err) {
+      console.error("Save named mission error:", err);
+      showToast("⚠ Network error saving named mission: " + err.message, "error");
     });
-  })
-  .then(function(r) {
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    return r.json();
-  })
-  .then(function(data) {
-    if (data.status === "success") {
-      window._currentMissionName = name;
-      showToast("💾 Mission successfully saved as: " + data.name, "success");
-      if (typeof loadSavedMissionsList === "function") loadSavedMissionsList();
-    } else {
-      showToast("⚠ Failed to save named mission: " + (data.message || "unknown"), "error");
-    }
-  })
-  .catch(function(err) {
-    console.error("Save named mission error:", err);
-    showToast("⚠ Network error saving named mission: " + err.message, "error");
-  });
 };
 
-window.loadSavedMissionsList = function() {
+window.loadSavedMissionsList = function () {
   var dropdown = document.getElementById("mission-select-dropdown");
   if (!dropdown) return;
-  
+
   fetch(SERVER_URL + "/missions/list?t=" + Date.now())
-  .then(function(r) { return r.json(); })
-  .then(function(list) {
-    dropdown.innerHTML = '<option value="">-- Choose a Saved Mission --</option>';
-    if (list && list.length > 0) {
-      list.forEach(function(item) {
-        var opt = document.createElement("option");
-        opt.value = item.name;
-        opt.textContent = item.name + " (" + item.waypoints.length + " spots)";
-        dropdown.appendChild(opt);
-      });
-    }
-  })
-  .catch(function() {
-    console.error("Failed to load saved named missions list");
-  });
+    .then(function (r) { return r.json(); })
+    .then(function (list) {
+      dropdown.innerHTML = '<option value="">-- Choose a Saved Mission --</option>';
+      if (list && list.length > 0) {
+        list.forEach(function (item) {
+          var opt = document.createElement("option");
+          opt.value = item.name;
+          opt.textContent = item.name + " (" + item.waypoints.length + " spots)";
+          dropdown.appendChild(opt);
+        });
+      }
+    })
+    .catch(function () {
+      console.error("Failed to load saved named missions list");
+    });
 };
 
-window.onSavedMissionSelected = function(val) {
+window.onSavedMissionSelected = function (val) {
   var tools = document.getElementById("mission-edit-tools");
   if (!val) {
     window._currentMissionName = "";
@@ -977,82 +977,82 @@ window.onSavedMissionSelected = function(val) {
     return;
   }
   if (tools) tools.style.display = "flex";
-  
+
   showToast("⏳ Loading mission config: " + val + "...", "info");
   fetch(SERVER_URL + "/mission/load_named", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: val })
   })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.status === "success") {
-      waypoints = data.waypoints || [];
-      window._currentMissionName = val;
-      renderWpList();
-      redrawWaypointMarkers();
-      showToast("✅ Loaded " + val + " configuration", "success");
-    } else {
-      showToast("⚠ Failed to load mission: " + (data.message || "unknown"), "error");
-    }
-  })
-  .catch(function() {
-    showToast("⚠ Network error loading named mission", "error");
-  });
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (data.status === "success") {
+        waypoints = data.waypoints || [];
+        window._currentMissionName = val;
+        renderWpList();
+        redrawWaypointMarkers();
+        showToast("✅ Loaded " + val + " configuration", "success");
+      } else {
+        showToast("⚠ Failed to load mission: " + (data.message || "unknown"), "error");
+      }
+    })
+    .catch(function () {
+      showToast("⚠ Network error loading named mission", "error");
+    });
 };
 
-window.overwriteLoadedMission = function() {
+window.overwriteLoadedMission = function () {
   if (!window._currentMissionName) return;
   if (waypoints.length === 0) {
     showToast("⚠ Cannot save an empty mission", "error");
     return;
   }
-  
-  window.showWarningModal("OVERWRITE MISSION", "Are you sure you want to overwrite mission '" + window._currentMissionName + "'?", function() {
-    saveMissionFile().then(function() {
+
+  window.showWarningModal("OVERWRITE MISSION", "Are you sure you want to overwrite mission '" + window._currentMissionName + "'?", function () {
+    saveMissionFile().then(function () {
       return fetch(SERVER_URL + "/mission/save_named", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: window._currentMissionName, waypoints: waypoints })
       });
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.status === "success") {
-        showToast("✅ Mission '" + window._currentMissionName + "' updated!", "success");
-        if (typeof loadSavedMissionsList === "function") loadSavedMissionsList();
-      } else {
-        showToast("⚠ Failed to update mission", "error");
-      }
-    })
-    .catch(function(err) {
-      showToast("⚠ Error updating mission", "error");
-    });
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.status === "success") {
+          showToast("✅ Mission '" + window._currentMissionName + "' updated!", "success");
+          if (typeof loadSavedMissionsList === "function") loadSavedMissionsList();
+        } else {
+          showToast("⚠ Failed to update mission", "error");
+        }
+      })
+      .catch(function (err) {
+        showToast("⚠ Error updating mission", "error");
+      });
   });
 };
 
-window.deleteLoadedMission = function() {
+window.deleteLoadedMission = function () {
   if (!window._currentMissionName) return;
-  
-  window.showWarningModal("DELETE MISSION", "Are you sure you want to permanently delete mission '" + window._currentMissionName + "'?", function() {
+
+  window.showWarningModal("DELETE MISSION", "Are you sure you want to permanently delete mission '" + window._currentMissionName + "'?", function () {
     fetch(SERVER_URL + "/mission/delete_named", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: window._currentMissionName })
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.status === "success") {
-        showToast("🗑 Mission '" + window._currentMissionName + "' deleted", "success");
-        clearWaypoints();
-        if (typeof loadSavedMissionsList === "function") loadSavedMissionsList();
-      } else {
-        showToast("⚠ Failed to delete mission", "error");
-      }
-    })
-    .catch(function(err) {
-      showToast("⚠ Error deleting mission", "error");
-    });
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.status === "success") {
+          showToast("🗑 Mission '" + window._currentMissionName + "' deleted", "success");
+          clearWaypoints();
+          if (typeof loadSavedMissionsList === "function") loadSavedMissionsList();
+        } else {
+          showToast("⚠ Failed to delete mission", "error");
+        }
+      })
+      .catch(function (err) {
+        showToast("⚠ Error deleting mission", "error");
+      });
   });
 };
 

@@ -62,10 +62,48 @@ var _POSE_KEY = "rbm_pose";   /* {x, y, yaw} — updated by every AMCL message *
 var _livePosePollTimer = null;
 
 function _saveLastPose(x, y, yaw) {
-  try { sessionStorage.setItem(_POSE_KEY, JSON.stringify({x:x,y:y,yaw:yaw})); } catch(e) {}
+  try { localStorage.setItem(_POSE_KEY, JSON.stringify({x:x,y:y,yaw:yaw})); } catch(e) {}
 }
 function _loadLastPose() {
-  try { var r = sessionStorage.getItem(_POSE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+  try { var r = localStorage.getItem(_POSE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+}
+
+function _fetchLatestRobotPose(isInitial) {
+  if (window._ignoreBackendPoseUntil && Date.now() < window._ignoreBackendPoseUntil) return;
+  fetch(SERVER_URL + "/robot_pose")
+    .then(function(r) { return r.json(); })
+    .then(function(pose) {
+      if (pose.error) return;
+      _saveLastPose(pose.x, pose.y, pose.yaw);
+      if (isInitial || !poseEstimateMode) {
+        _applyRobotPose(pose.x, pose.y, pose.yaw, isInitial);
+      }
+    })
+    .catch(function(e){});
+}
+
+/* On map load or delivery view load, fetch the last known pose.
+   First tries the backend (which knows the true running AMCL pose),
+   falls back to localStorage if backend has restarted or AMCL isn't publishing. */
+function _restorePoseFromBackend() {
+  fetch(SERVER_URL + "/robot_pose")
+    .then(function(r) { return r.json(); })
+    .then(function(saved) {
+      if (saved && typeof saved.x === "number") {
+        /* REFRESH — restore last known position on canvas immediately */
+        _applyRobotPose(saved.x, saved.y, saved.yaw, true);
+        return true;
+      }
+      return false;
+    })
+    .catch(function() {
+      var saved = _loadLastPose();
+      if (saved) {
+        _applyRobotPose(saved.x, saved.y, saved.yaw, true);
+        return true;
+      }
+      return false;
+    });
 }
 
 function _applyRobotPose(x, y, yaw, centerIfFirst) {
@@ -539,8 +577,16 @@ function _onMapPointerUp(e) {
     poseArrowContainer.visible = false;
     document.getElementById("btn-pose").classList.remove("btn-pose-ready");
 
-    publishInitialPose(poseStart.x, poseStart.y, yaw);
+    /* Cancel any pending startup auto-publish */
+    _posePublishToken++;
 
+    /* Publish pose with retry mechanism to guarantee delivery to AMCL */
+    _publishPoseWhenReady({ x: poseStart.x, y: poseStart.y, yaw: yaw });
+    
+    /* Save to localStorage so it survives tab reloads even if AMCL is lagging */
+    _saveLastPose(poseStart.x, poseStart.y, yaw);
+
+    /* Immediately draw it so the user sees the update */
     robotLayer.x        =  poseStart.x;
     robotLayer.y        = -poseStart.y;
     robotLayer.rotation = -yaw * (180 / Math.PI);
@@ -549,12 +595,9 @@ function _onMapPointerUp(e) {
     laserLayer.visible  = true;
     poseHasBeenSet      = true;
 
-    /* Cancel any pending startup auto-publish (prevents it from
-       overwriting this manual pose once AMCL becomes ready) */
-    _posePublishToken++;
-
-    /* Save this pose — used on refresh so we never auto-publish (0,0,0) */
-    _saveLastPose(poseStart.x, poseStart.y, yaw);
+    /* Ignore the old /robot_pose backend polling for 3 seconds to prevent the 
+       robot from rubberbanding back to its old position before AMCL finishes. */
+    window._ignoreBackendPoseUntil = Date.now() + 3000;
 
     if (typeof updateRobotPosHUD === "function") updateRobotPosHUD(poseStart.x, poseStart.y);
     if (typeof centerOnRobot === "function") centerOnRobot();
