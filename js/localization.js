@@ -11,17 +11,17 @@
 /* ---------- AMCL POSE SUBSCRIBER ---------- */
 
 var amclPoseTopic = new ROSLIB.Topic({
-  ros          : ros,
-  name         : RobotConfig.topics.amcl_pose,
-  messageType  : "geometry_msgs/PoseWithCovarianceStamped",
-  compression  : "none",
+  ros: ros,
+  name: RobotConfig.topics.amcl_pose,
+  messageType: "geometry_msgs/PoseWithCovarianceStamped",
+  compression: "none",
   throttle_rate: RobotConfig.throttle.amcl
 });
 amclPoseTopic.subscribe(function (msg) {
   if (mapMode !== "localization") return;
-  var p   = msg.pose.pose.position;
-  var q   = msg.pose.pose.orientation;
-  var yaw = Math.atan2(2*(q.w*q.z + q.x*q.y), 1 - 2*(q.y*q.y + q.z*q.z));
+  var p = msg.pose.pose.position;
+  var q = msg.pose.pose.orientation;
+  var yaw = Math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y * q.y + q.z * q.z));
   _applyRobotPose(p.x, p.y, yaw, false);
 });
 
@@ -29,10 +29,10 @@ amclPoseTopic.subscribe(function (msg) {
 /* ---------- /initialpose TOPIC ---------- */
 
 var initialPoseTopic = new ROSLIB.Topic({
-  ros         : ros,
-  name        : RobotConfig.topics.initial_pose,
-  messageType : "geometry_msgs/PoseWithCovarianceStamped",
-  compression : "none"
+  ros: ros,
+  name: RobotConfig.topics.initial_pose,
+  messageType: "geometry_msgs/PoseWithCovarianceStamped",
+  compression: "none"
 });
 
 function publishInitialPose(x, y, yaw) {
@@ -42,13 +42,13 @@ function publishInitialPose(x, y, yaw) {
     header: { frame_id: RobotConfig.frames.map },
     pose: {
       pose: {
-        position:    { x: x, y: y, z: 0 },
+        position: { x: x, y: y, z: 0 },
         orientation: { x: 0, y: 0, z: qz, w: qw }
       },
       covariance: [
-        0.25,0,0,0,0,0,  0,0.25,0,0,0,0,
-        0,0,0,0,0,0,     0,0,0,0,0,0,
-        0,0,0,0,0,0,     0,0,0,0,0,0.068
+        0.25, 0, 0, 0, 0, 0, 0, 0.25, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.068
       ]
     }
   }));
@@ -62,65 +62,27 @@ var _POSE_KEY = "rbm_pose";   /* {x, y, yaw} — updated by every AMCL message *
 var _livePosePollTimer = null;
 
 function _saveLastPose(x, y, yaw) {
-  try { localStorage.setItem(_POSE_KEY, JSON.stringify({x:x,y:y,yaw:yaw})); } catch(e) {}
+  try { sessionStorage.setItem(_POSE_KEY, JSON.stringify({ x: x, y: y, yaw: yaw })); } catch (e) { }
 }
 function _loadLastPose() {
-  try { var r = localStorage.getItem(_POSE_KEY); return r ? JSON.parse(r) : null; } catch(e) { return null; }
-}
-
-function _fetchLatestRobotPose(isInitial) {
-  if (window._ignoreBackendPoseUntil && Date.now() < window._ignoreBackendPoseUntil) return;
-  fetch(SERVER_URL + "/robot_pose")
-    .then(function(r) { return r.json(); })
-    .then(function(pose) {
-      if (pose.error) return;
-      _saveLastPose(pose.x, pose.y, pose.yaw);
-      if (isInitial || !poseEstimateMode) {
-        _applyRobotPose(pose.x, pose.y, pose.yaw, isInitial);
-      }
-    })
-    .catch(function(e){});
-}
-
-/* On map load or delivery view load, fetch the last known pose.
-   First tries the backend (which knows the true running AMCL pose),
-   falls back to localStorage if backend has restarted or AMCL isn't publishing. */
-function _restorePoseFromBackend() {
-  fetch(SERVER_URL + "/robot_pose")
-    .then(function(r) { return r.json(); })
-    .then(function(saved) {
-      if (saved && typeof saved.x === "number") {
-        /* REFRESH — restore last known position on canvas immediately */
-        _applyRobotPose(saved.x, saved.y, saved.yaw, true);
-        return true;
-      }
-      return false;
-    })
-    .catch(function() {
-      var saved = _loadLastPose();
-      if (saved) {
-        _applyRobotPose(saved.x, saved.y, saved.yaw, true);
-        return true;
-      }
-      return false;
-    });
+  try { var r = sessionStorage.getItem(_POSE_KEY); return r ? JSON.parse(r) : null; } catch (e) { return null; }
 }
 
 function _applyRobotPose(x, y, yaw, centerIfFirst) {
   var wasUnset = !poseHasBeenSet;
-  _robotYawRad        = yaw;
-  robotLayer.x        =  x;
-  robotLayer.y        = -y;
+  _robotYawRad = yaw;
+  robotLayer.x = x;
+  robotLayer.y = -y;
   robotLayer.rotation = -yaw * (180 / Math.PI);
-  robotLayer.visible  = true;
-  laserLayer.visible  = true;
-  poseHasBeenSet      = true;
+  robotLayer.visible = true;
+  laserLayer.visible = true;
+  poseHasBeenSet = true;
 
   var g = document.getElementById("btn-goal");
   var h = document.getElementById("btn-home");
-  var gl= document.getElementById("btn-get-location");
-  if (g)  { g.disabled = false; g.classList.add("btn-goal-ready"); }
-  if (h)  h.disabled = false;
+  var gl = document.getElementById("btn-get-location");
+  if (g) { g.disabled = false; g.classList.add("btn-goal-ready"); }
+  if (h) h.disabled = false;
   if (gl) gl.disabled = false;
   if (typeof enableMissionButtons === "function") enableMissionButtons();
 
@@ -136,22 +98,22 @@ function _applyRobotPose(x, y, yaw, centerIfFirst) {
 
 function _fetchLatestRobotPose(centerIfFirst) {
   return fetch(SERVER_URL + "/robot_pose")
-    .then(function(r) {
+    .then(function (r) {
       if (r.status === 204) return null;
       return r.json();
     })
-    .then(function(p) {
+    .then(function (p) {
       if (!p || p.status !== "ok") return null;
       _applyRobotPose(Number(p.x), Number(p.y), Number(p.yaw), !!centerIfFirst);
       return p;
     })
-    .catch(function() { return null; });
+    .catch(function () { return null; });
 }
 
 function _restorePoseFromBackend() {
   if (poseHasBeenSet) return Promise.resolve(true);
   return _fetchLatestRobotPose(true)
-    .then(function(p) {
+    .then(function (p) {
       if (p) return true;
       var saved = _loadLastPose();
       if (saved) {
@@ -160,7 +122,7 @@ function _restorePoseFromBackend() {
       }
       return false;
     })
-    .catch(function() {
+    .catch(function () {
       var saved = _loadLastPose();
       if (saved) {
         _applyRobotPose(saved.x, saved.y, saved.yaw, true);
@@ -177,7 +139,7 @@ function initLocalizationView() {
 function startLivePosePolling() {
   if (_livePosePollTimer) return;
   _fetchLatestRobotPose(true);
-  _livePosePollTimer = setInterval(function() {
+  _livePosePollTimer = setInterval(function () {
     if (mapMode === "localization") _fetchLatestRobotPose(false);
   }, 500);
 }
@@ -200,20 +162,20 @@ function _publishPoseWhenReady(pose, tries, token) {
   if (tries > 20) return;
   if (token !== _posePublishToken) return;  /* cancelled by manual pose set */
   fetch(SERVER_URL + "/amcl/ready")
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
       if (token !== _posePublishToken) return;  /* cancelled */
       if (d.ready) {
         publishInitialPose(pose.x, pose.y, pose.yaw);
-        setTimeout(function() {
+        setTimeout(function () {
           if (token === _posePublishToken) publishInitialPose(pose.x, pose.y, pose.yaw);
         }, 1500);
       } else {
-        setTimeout(function() { _publishPoseWhenReady(pose, tries + 1, token); }, 2000);
+        setTimeout(function () { _publishPoseWhenReady(pose, tries + 1, token); }, 2000);
       }
     })
-    .catch(function() {
-      setTimeout(function() { _publishPoseWhenReady(pose, tries + 1, token); }, 2000);
+    .catch(function () {
+      setTimeout(function () { _publishPoseWhenReady(pose, tries + 1, token); }, 2000);
     });
 }
 
@@ -223,10 +185,10 @@ function startLocalization() {
   lockMapping();
   if (typeof resetMapFit === "function") resetMapFit();
 
-  var map  = document.getElementById("mapSelect").value;
+  var map = document.getElementById("mapSelect").value;
   var yaml = map.replace(".pgm", ".yaml");
   document.getElementById("mapImage").style.display = "none";
-  document.getElementById("map").style.display      = "block";
+  document.getElementById("map").style.display = "block";
   showToast("⏳ Starting localization...", "info");
   if (typeof window.showLoadingOverlay === "function") {
     window.showLoadingOverlay("Launching Navigation Stack & AMCL Localization...");
@@ -239,7 +201,7 @@ function startLocalization() {
   function _waitForMapThenHideOverlay(onDone) {
     if (typeof window.hideLoadingOverlay !== "function") return;
     var _mapWaitStart = Date.now();
-    var _mapWaitTimer = setInterval(function() {
+    var _mapWaitTimer = setInterval(function () {
       var mapLoaded = (typeof _mapFitted !== "undefined" && _mapFitted && typeof mapBitmap !== "undefined" && mapBitmap !== null);
       var timedOut = (Date.now() - _mapWaitStart) > 60000;
       if (mapLoaded || timedOut) {
@@ -260,7 +222,7 @@ function startLocalization() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ map: yaml })
   })
-    .then(function(r) { return r.json(); })
+    .then(function (r) { return r.json(); })
     .then(function (d) {
       robotLayer.visible = true;
       laserLayer.visible = true;
@@ -292,7 +254,7 @@ function startLocalization() {
         _applyRobotPose(0, 0, 0, true);
         _publishPoseWhenReady(homePose);
         /* Show the big "Fix Robot Position" modal after map loads */
-        _waitForMapThenHideOverlay(function() {
+        _waitForMapThenHideOverlay(function () {
           if (typeof window.showFixPoseModal === "function") {
             window.showFixPoseModal();
           }
@@ -312,7 +274,7 @@ function startLocalization() {
       if (btnGetLoc) btnGetLoc.disabled = false;
       if (typeof enableMissionButtons === "function") enableMissionButtons();
     })
-    .catch(function() {
+    .catch(function () {
       if (typeof window.hideLoadingOverlay === "function") window.hideLoadingOverlay();
       showToast("⚠ Failed to start localization", "error");
     });
@@ -324,11 +286,11 @@ function startLocalization() {
 function enablePoseEstimate() {
   if (mapMode !== "localization") { showToast("⚠ Start localization first", "error"); return; }
   poseEstimateMode = true;
-  goalPoseMode     = false;
-  freezeOdom       = true;
-  document.getElementById("map").style.cursor          = "crosshair";
+  goalPoseMode = false;
+  freezeOdom = true;
+  document.getElementById("map").style.cursor = "crosshair";
   document.getElementById("pose-banner").style.display = "flex";
-  document.getElementById("pose-coords").textContent   = "Click on map to place robot…";
+  document.getElementById("pose-coords").textContent = "Click on map to place robot…";
   showToast("🎯 Click on map and drag to set heading", "info");
 }
 
@@ -356,34 +318,34 @@ function getLocationAsWaypoint() {
     return;
   }
   /* Get current robot position from stored ROS coords */
-  var rx  = robotLayer.x;          /* already ros_x (no FLIP_X needed) */
-  var ry  = -robotLayer.y;         /* ros_y */
+  var rx = robotLayer.x;          /* already ros_x (no FLIP_X needed) */
+  var ry = -robotLayer.y;         /* ros_y */
   var yaw = _robotYawRad || 0;
 
   /* Build waypoint name */
   var nameInput = document.getElementById("get-loc-name");
   var name = (nameInput && nameInput.value.trim()) ||
-             ("WP" + (waypoints.length + 1) + " (" + rx.toFixed(1) + "," + ry.toFixed(1) + ")");
+    ("WP" + (waypoints.length + 1) + " (" + rx.toFixed(1) + "," + ry.toFixed(1) + ")");
 
   /* Add to waypoints list */
   waypoints.push({ name: name, x: rx, y: ry, yaw: yaw });
   if (nameInput) nameInput.value = "";
 
   /* Refresh UI */
-  if (typeof renderWpList          === "function") renderWpList();
+  if (typeof renderWpList === "function") renderWpList();
   if (typeof redrawWaypointMarkers === "function") redrawWaypointMarkers();
-  if (typeof saveMissionFile       === "function") saveMissionFile({ notify: true }).catch(function () { });
+  if (typeof saveMissionFile === "function") saveMissionFile({ notify: true }).catch(function () { });
 
   showToast("📍 Added waypoint: " + name, "success");
 }
 
 function enableGoalPose() {
   if (!poseHasBeenSet) { showToast("⚠ Set pose estimate first", "error"); return; }
-  goalPoseMode     = true;
+  goalPoseMode = true;
   poseEstimateMode = false;
-  document.getElementById("map").style.cursor          = "crosshair";
+  document.getElementById("map").style.cursor = "crosshair";
   document.getElementById("pose-banner").style.display = "flex";
-  document.getElementById("pose-coords").textContent   = "Click on map to set navigation goal…";
+  document.getElementById("pose-coords").textContent = "Click on map to set navigation goal…";
   document.getElementById("btn-goal").classList.add("btn-goal-active");
   showToast("🟢 Click on map and drag to set goal heading", "info");
 }
@@ -441,7 +403,7 @@ function goHome() {
 /* ---------- MOUSE / TOUCH DRAG — POSE / GOAL / WAYPOINT ---------- */
 
 var poseStart = null;
-var dragging  = false;
+var dragging = false;
 
 function _getPointerCoords(e) {
   if (e.touches && e.touches.length) {
@@ -460,26 +422,26 @@ mapCanvas.addEventListener("touchstart", _onMapPointerDown, { passive: false });
 function _onMapPointerDown(e) {
   if (!poseEstimateMode && !goalPoseMode && !waypointMode) return;
   e.preventDefault();
-  dragging  = true;
+  dragging = true;
   var pt = _getPointerCoords(e);
   poseStart = canvasToRos(pt.clientX, pt.clientY);
 
   if (waypointMode) {
-    wpArrowContainer.x        =  poseStart.x;
-    wpArrowContainer.y        =  poseStart.y;
+    wpArrowContainer.x = poseStart.x;
+    wpArrowContainer.y = poseStart.y;
     wpArrowContainer.rotation = 0;
-    wpArrowContainer.visible  = true;
+    wpArrowContainer.visible = true;
   } else if (poseEstimateMode) {
-    poseArrowContainer.x        =  poseStart.x;
-    poseArrowContainer.y        =  poseStart.y;
+    poseArrowContainer.x = poseStart.x;
+    poseArrowContainer.y = poseStart.y;
     poseArrowContainer.rotation = 0;
-    poseArrowContainer.visible  = true;
+    poseArrowContainer.visible = true;
     laserLayer.visible = true;
   } else {
-    goalArrowContainer.x        =  poseStart.x;
-    goalArrowContainer.y        =  poseStart.y;
+    goalArrowContainer.x = poseStart.x;
+    goalArrowContainer.y = poseStart.y;
     goalArrowContainer.rotation = 0;
-    goalArrowContainer.visible  = true;
+    goalArrowContainer.visible = true;
   }
 
   stage.update();
@@ -497,7 +459,7 @@ function _onMapPointerMove(e) {
   var pt = _getPointerCoords(e);
   var rosPos = canvasToRos(pt.clientX, pt.clientY);
   /* yaw from ROS-space delta — scaleX<0 in scene already handles flip */
-  var yaw    = Math.atan2(rosPos.y - poseStart.y, rosPos.x - poseStart.x);
+  var yaw = Math.atan2(rosPos.y - poseStart.y, rosPos.x - poseStart.x);
 
   /* EaselJS rotation formula (proven for scaleX>0 or scaleX<0, scaleY always <0):
      rotation = +yaw_deg  puts arrow tip in correct screen direction.
@@ -541,14 +503,14 @@ function _onMapPointerUp(e) {
   var pt = _getPointerCoords(e);
   var rosPos = canvasToRos(pt.clientX, pt.clientY);
   /* yaw from ROS-space delta — scaleX<0 naturally gives correct heading */
-  var yaw    = Math.atan2(rosPos.y - poseStart.y, rosPos.x - poseStart.x);
+  var yaw = Math.atan2(rosPos.y - poseStart.y, rosPos.x - poseStart.x);
 
   document.getElementById("pose-banner").style.display = "none";
-  document.getElementById("map").style.cursor          = "default";
+  document.getElementById("map").style.cursor = "default";
 
   /* --- WAYPOINT branch --- */
   if (waypointMode) {
-    waypointMode             = false;
+    waypointMode = false;
     wpArrowContainer.visible = false;
     document.getElementById("btn-add-wp").classList.remove("btn-wp-active");
 
@@ -563,7 +525,7 @@ function _onMapPointerUp(e) {
     }
 
     var name = document.getElementById("wp-name").value.trim() ||
-               ("Waypoint " + (waypoints.length + 1));
+      ("Waypoint " + (waypoints.length + 1));
     waypoints.push({ name: name, x: poseStart.x, y: poseStart.y, yaw: yaw });
     document.getElementById("wp-name").value = "";
     renderWpList();
@@ -571,33 +533,28 @@ function _onMapPointerUp(e) {
     saveMissionFile({ notify: true }).catch(function () { });
     showToast("📍 Added: " + name, "success");
 
-  /* --- POSE ESTIMATE branch --- */
+    /* --- POSE ESTIMATE branch --- */
   } else if (poseEstimateMode) {
-    poseEstimateMode           = false;
+    poseEstimateMode = false;
     poseArrowContainer.visible = false;
     document.getElementById("btn-pose").classList.remove("btn-pose-ready");
 
-    /* Cancel any pending startup auto-publish */
+    publishInitialPose(poseStart.x, poseStart.y, yaw);
+
+    robotLayer.x = poseStart.x;
+    robotLayer.y = -poseStart.y;
+    robotLayer.rotation = -yaw * (180 / Math.PI);
+    _robotYawRad = yaw;
+    robotLayer.visible = true;
+    laserLayer.visible = true;
+    poseHasBeenSet = true;
+
+    /* Cancel any pending startup auto-publish (prevents it from
+       overwriting this manual pose once AMCL becomes ready) */
     _posePublishToken++;
 
-    /* Publish pose with retry mechanism to guarantee delivery to AMCL */
-    _publishPoseWhenReady({ x: poseStart.x, y: poseStart.y, yaw: yaw });
-    
-    /* Save to localStorage so it survives tab reloads even if AMCL is lagging */
+    /* Save this pose — used on refresh so we never auto-publish (0,0,0) */
     _saveLastPose(poseStart.x, poseStart.y, yaw);
-
-    /* Immediately draw it so the user sees the update */
-    robotLayer.x        =  poseStart.x;
-    robotLayer.y        = -poseStart.y;
-    robotLayer.rotation = -yaw * (180 / Math.PI);
-    _robotYawRad        = yaw;
-    robotLayer.visible  = true;
-    laserLayer.visible  = true;
-    poseHasBeenSet      = true;
-
-    /* Ignore the old /robot_pose backend polling for 3 seconds to prevent the 
-       robot from rubberbanding back to its old position before AMCL finishes. */
-    window._ignoreBackendPoseUntil = Date.now() + 3000;
 
     if (typeof updateRobotPosHUD === "function") updateRobotPosHUD(poseStart.x, poseStart.y);
     if (typeof centerOnRobot === "function") centerOnRobot();
@@ -615,9 +572,9 @@ function _onMapPointerUp(e) {
       "  θ: " + (yaw * 180 / Math.PI).toFixed(1) + "°", "success"
     );
 
-  /* --- GOAL POSE branch --- */
+    /* --- GOAL POSE branch --- */
   } else if (goalPoseMode) {
-    goalPoseMode               = false;
+    goalPoseMode = false;
     goalArrowContainer.visible = false;
     document.getElementById("btn-goal").classList.remove("btn-goal-active");
 
@@ -643,13 +600,13 @@ function _onMapPointerUp(e) {
 /* ---------- NAV PATH VISUALIZATION ---------- */
 
 /* ── NAV PATH — drawn on a DOM overlay canvas for pixel-accurate line width ── */
-var pathVisible  = true;
-var _lastPath    = null;   /* cached for redraw on zoom/pan */
+var pathVisible = true;
+var _lastPath = null;   /* cached for redraw on zoom/pan */
 
-var _pathCanvas = (function() {
+var _pathCanvas = (function () {
   var c = document.createElement("canvas");
   c.style.cssText = "position:absolute;top:0;left:0;pointer-events:none;z-index:3;";
-  setTimeout(function() {
+  setTimeout(function () {
     var mc = document.getElementById("map");
     if (mc) mc.appendChild(c);
   }, 200);
@@ -660,7 +617,7 @@ var _pathCtx = _pathCanvas.getContext("2d");
 function _syncPathCanvas() {
   var sc = typeof stage !== "undefined" ? stage.canvas : null;
   if (!sc) return;
-  if (_pathCanvas.width  !== sc.width)  _pathCanvas.width  = sc.width;
+  if (_pathCanvas.width !== sc.width) _pathCanvas.width = sc.width;
   if (_pathCanvas.height !== sc.height) _pathCanvas.height = sc.height;
 }
 
@@ -671,15 +628,15 @@ function _drawPathOnCanvas(poses) {
   if (Math.abs(viewer.scene.scaleX) < 2) return;   /* map not loaded yet */
 
   _pathCtx.strokeStyle = "#22c55e";   /* green like RViz planned path */
-  _pathCtx.lineWidth   = 2;           /* thinner — cleaner look */
-  _pathCtx.lineJoin    = "round";
-  _pathCtx.lineCap     = "round";
+  _pathCtx.lineWidth = 2;           /* thinner — cleaner look */
+  _pathCtx.lineJoin = "round";
+  _pathCtx.lineCap = "round";
   _pathCtx.setLineDash([6, 5]);
 
   var s = viewer.scene;
   _pathCtx.beginPath();
   var first = poses[0].pose.position;
-  var fp    = { px: s.x + first.x * s.scaleX, py: s.y + first.y * s.scaleY };
+  var fp = { px: s.x + first.x * s.scaleX, py: s.y + first.y * s.scaleY };
   _pathCtx.moveTo(fp.px, fp.py);
   for (var i = 1; i < poses.length; i++) {
     var pt = poses[i].pose.position;
@@ -694,10 +651,10 @@ function redrawPath() {
 }
 
 var planTopic = new ROSLIB.Topic({
-  ros          : ros,
-  name         : RobotConfig.topics.nav_plan,
-  messageType  : "nav_msgs/Path",
-  compression  : "none",
+  ros: ros,
+  name: RobotConfig.topics.nav_plan,
+  messageType: "nav_msgs/Path",
+  compression: "none",
   throttle_rate: RobotConfig.throttle.plan
 });
 planTopic.subscribe(function (msg) {
@@ -727,12 +684,12 @@ function clearNavPath() {
 /* Uses a DOM canvas overlay (same approach as scan) — no EaselJS path bugs */
 
 var costmapVisible = false;
-var costmapClient  = null;
+var costmapClient = null;
 
-var _costmapCanvas = (function() {
+var _costmapCanvas = (function () {
   var c = document.createElement("canvas");
   c.style.cssText = "position:absolute;top:0;left:0;pointer-events:none;z-index:4;";
-  setTimeout(function() {
+  setTimeout(function () {
     var mc = document.getElementById("map");
     if (mc) mc.appendChild(c);
   }, 150);
@@ -742,7 +699,7 @@ var _costmapCtx = _costmapCanvas.getContext("2d");
 
 function _syncCostmapCanvas() {
   var sc = stage.canvas;
-  if (_costmapCanvas.width  !== sc.width)  _costmapCanvas.width  = sc.width;
+  if (_costmapCanvas.width !== sc.width) _costmapCanvas.width = sc.width;
   if (_costmapCanvas.height !== sc.height) _costmapCanvas.height = sc.height;
 }
 
@@ -778,12 +735,12 @@ function drawCostmap(grid) {
   _costmapCtx.clearRect(0, 0, _costmapCanvas.width, _costmapCanvas.height);
   if (Math.abs(viewer.scene.scaleX) < 2) return;   /* map not loaded yet */
 
-  var info  = grid.info;
-  var res   = info.resolution;
-  var ox    = info.origin.position.x;
-  var oy    = info.origin.position.y;
-  var w     = info.width;
-  var data  = grid.data;
+  var info = grid.info;
+  var res = info.resolution;
+  var ox = info.origin.position.x;
+  var oy = info.origin.position.y;
+  var w = info.width;
+  var data = grid.data;
   var scene = viewer.scene;
   /* pixel size of one costmap cell */
   var cellPx = Math.max(1, Math.ceil(Math.abs(res * scene.scaleX)));  /* ceil = sharp, no gaps */
@@ -795,11 +752,11 @@ function drawCostmap(grid) {
 
     var col = i % w;
     var row = Math.floor(i / w);
-    var wx  = ox + (col + 0.5) * res;
-    var wy  = oy + (row + 0.5) * res;
-    var px  = scene.x + wx * scene.scaleX;
-    var py  = scene.y + wy * scene.scaleY;
-    if (px < -cellPx || px > _costmapCanvas.width  + cellPx) continue;
+    var wx = ox + (col + 0.5) * res;
+    var wy = oy + (row + 0.5) * res;
+    var px = scene.x + wx * scene.scaleX;
+    var py = scene.y + wy * scene.scaleY;
+    if (px < -cellPx || px > _costmapCanvas.width + cellPx) continue;
     if (py < -cellPx || py > _costmapCanvas.height + cellPx) continue;
 
     /* RViz-style costmap colours (soft, matching reference image):
@@ -820,19 +777,19 @@ function drawCostmap(grid) {
       _costmapCtx.fillStyle = "rgba(80,80,80,0.85)";      /* inscribed: dark gray */
     } else if (cost >= 128) {
       /* near-lethal: medium gray, darker with higher cost */
-      var t1  = (cost - 128) / 124;
+      var t1 = (cost - 128) / 124;
       var gv1 = Math.round(140 - t1 * 60);                /* 140 → 80 */
-      var a1  = 0.50 + t1 * 0.30;
+      var a1 = 0.50 + t1 * 0.30;
       _costmapCtx.fillStyle = "rgba(" + gv1 + "," + gv1 + "," + gv1 + "," + a1.toFixed(2) + ")";
     } else if (cost >= 20) {
       /* inflation: light gray, fading out at lower cost */
-      var t2  = (cost - 20) / 107;
+      var t2 = (cost - 20) / 107;
       var gv2 = Math.round(180 + t2 * 0);                 /* constant light gray 180 */
-      var a2  = 0.10 + t2 * 0.30;                         /* 0.10 → 0.40 opacity */
+      var a2 = 0.10 + t2 * 0.30;                         /* 0.10 → 0.40 opacity */
       _costmapCtx.fillStyle = "rgba(" + gv2 + "," + gv2 + "," + gv2 + "," + a2.toFixed(2) + ")";
     } else {
       _costmapCtx.fillStyle = "rgba(200,200,200,0.06)";
     }
-    _costmapCtx.fillRect(px - cellPx/2, py - cellPx/2, cellPx, cellPx);
+    _costmapCtx.fillRect(px - cellPx / 2, py - cellPx / 2, cellPx, cellPx);
   }
 }
